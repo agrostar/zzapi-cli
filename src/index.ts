@@ -1,9 +1,8 @@
 import * as path from "path";
 
 import { Command } from "commander";
-import { Bundle } from "./utils/bundleUtils";
 import { initRawRequest } from "./utils/requestUtils";
-import { callRequest } from "./callRequests";
+import { callRequests } from "./runRequests";
 
 const program = new Command();
 program
@@ -20,4 +19,4 @@ const options = program.opts();
 // the request
 const pathArg = program.args[0];
 initRawRequest(pathArg, options.suppress === true, options.request, options.env);
-callRequest("1.0.0");
+callRequests("1.0.0", options.request);

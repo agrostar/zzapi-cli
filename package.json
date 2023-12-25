@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "4.1.2",
     "commander": "^11.1.0",
     "zzapi": "^1.0.0"
   },

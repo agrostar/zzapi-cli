@@ -5,15 +5,28 @@ import { captureVariables } from "zzapi";
 import { replaceVariablesInRequest } from "zzapi";
 
 import { getVarStore } from "./variables";
+import {
+  C_ERR,
+  C_ERR_TEXT,
+  C_LOADING,
+  C_SUC,
+  C_SUC_TEXT,
+  C_TIME,
+  C_WARN,
+  C_WARN_TEXT,
+} from "./utils/colours";
 
 function formatTestResults(results: TestResult[]): string {
   const resultLines: string[] = [];
   for (const r of results) {
     let line: string;
     if (r.pass) {
-      line = `\t[INFO] test ${r.spec}: expected ${r.op}: ${r.expected} OK`;
+      line = `\t` + C_SUC(`[INFO]`) + C_SUC_TEXT(` test ${r.spec}: expected ${r.op}: ${r.expected} OK`);
     } else {
-      line = `\t[FAIL] test ${r.spec}: expected ${r.op}: ${r.expected} | got ${r.received}`;
+      line =
+        `\t` +
+        C_ERR(`[FAIL]`) +
+        C_ERR_TEXT(` test ${r.spec}: expected ${r.op}: ${r.expected} | got ${r.received}`);
     }
     if (r.message) {
       line = `${line} [${r.message}]`;
@@ -30,7 +43,14 @@ export async function allRequestsWithProgress(allRequests: {
   let responses: Array<{ name: string; response: ResponseData }> = [];
 
   for (const name in allRequests) {
-    console.log(`Running ${name}...`);
+    const reqNameMessage = `Running ${name}`;
+    process.stdout.write(C_LOADING(`${reqNameMessage}\r`));
+    let dots = "";
+    let reqTimer = setInterval(() => {
+      dots += ".";
+      process.stdout.write(C_LOADING(`\r${reqNameMessage}${dots}`));
+    }, 1000);
+
     let requestData = allRequests[name];
     const method = requestData.httpRequest.method;
 
@@ -44,6 +64,8 @@ export async function allRequestsWithProgress(allRequests: {
       error: error,
     } = await executeGotRequest(currHttpRequest);
 
+    clearInterval(reqTimer);
+
     const response: ResponseData = {
       executionTime: executionTime + " ms",
       status: httpResponse.statusCode,
@@ -54,11 +76,17 @@ export async function allRequestsWithProgress(allRequests: {
     };
 
     if (error) {
-      let message = `${new Date().toLocaleString()} [ERROR] ${method} ${name} Error executing request: ${error})`;
+      let message =
+        C_TIME(`${new Date().toLocaleString()} `) +
+        C_ERR(`[ERROR]`) +
+        C_ERR_TEXT(` ${method} ${name} Error executing request: ${error})`);
       if (undefs.length > 0) {
-        message += `\n\t[warn]  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`;
+        message +=
+          `\n\t` +
+          C_WARN(`[warn]`) +
+          C_WARN_TEXT(` Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
       }
-      console.log(message);
+      process.stdout.write(`\r${message}\n`);
       continue;
     }
 
@@ -86,9 +114,12 @@ export async function allRequestsWithProgress(allRequests: {
     const et = response.executionTime;
     if (parseError) {
       const message =
-        `${new Date().toLocaleString()} [ERROR] ` +
-        `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`;
-      console.log(message);
+        C_TIME(`${new Date().toLocaleString()}`) +
+        C_ERR(` [ERROR] `) +
+        C_ERR_TEXT(
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
+        );
+      process.stdout.write(`\r${message}\n`);
       continue;
     }
 
@@ -98,12 +129,15 @@ export async function allRequestsWithProgress(allRequests: {
 
     let message: string = "";
     if (all == passed) {
-      message += `${new Date().toLocaleString()} [INFO]  `;
+      message += C_TIME(`${new Date().toLocaleString()}`) + C_SUC(` [INFO]  `);
     } else {
-      message += `${new Date().toLocaleString()} [ERROR] `;
+      message += C_TIME(`${new Date().toLocaleString()}`) + C_ERR(` [ERROR] `);
     }
-    const testString = all == 0 ? "" : `tests: ${passed}/${all} passed`;
-    message += `${method} ${name} status: ${status} size: ${size} B time: ${et} ${testString}\n`;
+    let testString = all == 0 ? "" : `tests: ${passed}/${all} passed`;
+    testString = passed === all ? C_SUC_TEXT(testString) : C_ERR_TEXT(testString);
+    let summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${et} ${testString}\n`;
+    message += passed === all ? C_SUC_TEXT(summaryString) : C_ERR_TEXT(summaryString);
+
     if (all != passed) {
       message += formatTestResults(results) + "\n";
     }
@@ -113,13 +147,16 @@ export async function allRequestsWithProgress(allRequests: {
     const capturedErrors = captureOutput.captureErrors;
     getVarStore().mergeCapturedVariables(capturedVariables);
     if (capturedErrors) {
-      message += capturedErrors + "\n";
+      message += C_ERR(`${capturedErrors}`) + "\n";
     }
     if (undefs.length > 0) {
-      message += `\t[WARN]  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?\n`;
+      message +=
+        `\t` +
+        C_WARN(`[WARN]`) +
+        C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?\n`);
     }
 
-    console.log(message);
+    process.stdout.write(`\r${message}`);
   }
   return responses;
 }

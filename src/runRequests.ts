@@ -4,7 +4,7 @@ import { RequestSpec, ResponseData } from "zzapi";
 import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
-import { openEditorForIndividualReq, openEditorForAllRequests } from "./showInEditor";
+import { openEditorForIndividualReq, openEditorForAllRequests } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore } from "./variables";
 import { getRawRequest } from "./utils/requestUtils";
@@ -45,7 +45,7 @@ async function runRequests(
 
   if (Object.keys(requests).length > 1) {
     await openEditorForAllRequests(responses);
-  } else {
+  } else if (Object.keys(requests).length === 1) {
     const name = Object.keys(requests)[0];
     const theRequest = requests[name];
     const theResponse = allResponses[0].response;
@@ -58,13 +58,13 @@ async function runRequests(
   }
 }
 
-export async function runRequestsHelper(extensionVersion: string, name?: string): Promise<void> {
+export async function callRequests(extensionVersion: string, name?: string): Promise<void> {
+  let allRequests: { [name: string]: RequestSpec };
   if (name) {
     const request: RequestSpec = getRequestSpec(getRawRequest().bundle.bundleContents, name);
-    const requests: { [name: string]: RequestSpec } = { [name]: request };
-    await runRequests(requests, extensionVersion);
+    allRequests = { [name]: request };
   } else {
-    const allRequests = getAllRequestSpecs(getRawRequest().bundle.bundleContents);
-    await runRequests(allRequests, extensionVersion);
+    allRequests = getAllRequestSpecs(getRawRequest().bundle.bundleContents);
   }
+  await runRequests(allRequests, extensionVersion);
 }

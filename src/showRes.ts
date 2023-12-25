@@ -80,12 +80,7 @@ function getDataOfIndReqAsString(
  *  response. Thus, any name === undefined test is to determine this.
  * @returns (void)
  */
-function showContent(
-  bodyContent: string,
-  headersContent: string,
-  showHeaders: boolean,
-  name?: string
-) {
+function showContent(bodyContent: string, headersContent: string, showHeaders: boolean, name?: string) {
   let bodyLanguage: string | undefined;
   bodyLanguage = "json";
   try {
@@ -94,7 +89,9 @@ function showContent(
     bodyLanguage = undefined;
   }
 
-  console.log(bodyContent);
+  if (!getRawRequest().suppress) {
+    console.log(`----------\nbody:\n${bodyContent}\n"----------`);
+  }
 
   if (name) {
     if (showHeaders) {
