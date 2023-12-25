@@ -4,10 +4,11 @@ import { RequestSpec, ResponseData } from "zzapi";
 import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
+import { getRawRequest } from "./utils/requestUtils";
+
 import { openEditorForIndividualReq, openEditorForAllRequests } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
-import { getVarFileContents, getVarStore } from "./variables";
-import { getRawRequest } from "./utils/requestUtils";
+import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
 
 async function runRequests(
   requests: { [name: string]: RequestSpec },
@@ -60,11 +61,12 @@ async function runRequests(
 
 export async function callRequests(extensionVersion: string, name?: string): Promise<void> {
   let allRequests: { [name: string]: RequestSpec };
+  const content = replaceFileContentsInString(getRawRequest().bundle.bundleContents);
   if (name) {
-    const request: RequestSpec = getRequestSpec(getRawRequest().bundle.bundleContents, name);
+    const request: RequestSpec = getRequestSpec(content, name);
     allRequests = { [name]: request };
   } else {
-    allRequests = getAllRequestSpecs(getRawRequest().bundle.bundleContents);
+    allRequests = getAllRequestSpecs(content);
   }
   await runRequests(allRequests, extensionVersion);
 }

@@ -1,6 +1,5 @@
 import path from "path";
 import * as fs from "fs";
-import { replaceFileContentsInString } from "../variables";
 
 const BUNDLE_FILE_NAME_ENDINGS = [".zzb", ".zzb.yml", ".zzb.yaml"] as const;
 
@@ -23,6 +22,6 @@ export class Bundle {
   }
 
   readContents() {
-    this.bundleContents = replaceFileContentsInString(fs.readFileSync(this.bundlePath, "utf-8"));
+    this.bundleContents = fs.readFileSync(this.bundlePath, "utf-8");
   }
 }
