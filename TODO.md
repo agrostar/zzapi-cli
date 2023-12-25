@@ -1,0 +1,5 @@
+- Get rid of the warning in zzapi-core. 
+- try-catches for calls to the core so you can capture and show errors thrown there
+- return 0 for success, 1 for fail
+- think about other functionality. 
+- Read version from package.json or npm version or something. 

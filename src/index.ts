@@ -10,9 +10,9 @@ program
   .version("0.0.0")
   .description("CLI for zzAPI - an API testing framework")
   .argument("<pathToBundle>", "The bundle whose requests to run")
-  .option("--request <name>", "If specified, we only run the request of the specified name")
-  .option("--env <name>", "If specified, request is run in this environment")
-  .option("--supress", "If specified, we do not show the request output")
+  .option("--request <name>", "Run a request of a particular name")
+  .option("--env <name>", "Run the request in a particular environment")
+  .option("--suppress", "Suppress the body output in the terminal")
   .parse(process.argv);
 const options = program.opts();
 
