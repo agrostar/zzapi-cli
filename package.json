@@ -1,18 +1,19 @@
 {
   "name": "zzapi-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI for zzAPI - an API testing framework",
   "main": "dist/index.js",
   "bin": {
-    "zzapi": "./dist/index.js"
+    "zzapi-cli": "./dist/index.js"
   },
   "scripts": {
+    "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/utils/version.ts",
     "build": "npx tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "agrostar",
+  "license": "MIT",
   "dependencies": {
     "chalk": "4.1.2",
     "commander": "^11.1.0",

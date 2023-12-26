@@ -1,2 +1,0 @@
-- think about other functionality. 
-- Read version from package.json or npm version or something. 

@@ -19,12 +19,14 @@ async function runRequests(
   extensionVersion: string
 ): Promise<void> {
   try {
-    const env: string = (getRawRequest().envName ? getRawRequest().envName : "") as string;
-    const loadedVariables = loadVariables(
-      env,
-      getRawRequest().bundle.bundleContents,
-      getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
-    );
+    const env = getRawRequest().envName;
+    const loadedVariables = !env
+      ? []
+      : loadVariables(
+          env,
+          getRawRequest().bundle.bundleContents,
+          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
+        );
     getVarStore().setLoadedVariables(loadedVariables);
   } catch (err: any) {
     throwError(err);
@@ -33,13 +35,12 @@ async function runRequests(
 
   for (const name in requests) {
     const request = requests[name];
-    const autoHeaders: { [key: string]: string } = {
-      "user-agent": "zzAPI-runner/" + extensionVersion,
-    };
 
-    if (request.httpRequest.body && typeof request.httpRequest.body == "object") {
+    const autoHeaders: { [key: string]: string } = {
+      "user-agent": "zzAPI-cli/" + extensionVersion,
+    };
+    if (request.httpRequest.body && typeof request.httpRequest.body == "object")
       autoHeaders["content-type"] = "application/json";
-    }
 
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
   }
@@ -68,7 +69,9 @@ async function runRequests(
   }
 }
 
-export async function callRequests(extensionVersion: string, name?: string): Promise<void> {
+export async function callRequests(extensionVersion: string): Promise<void> {
+  const name = getRawRequest().requestName;
+
   let allRequests: { [name: string]: RequestSpec };
   const content = replaceFileContentsInString(getRawRequest().bundle.bundleContents);
   if (name) {
@@ -90,5 +93,5 @@ export async function callRequests(extensionVersion: string, name?: string): Pro
   await runRequests(allRequests, extensionVersion);
 
   console.error(`\nexiting with status ${statusCode}`);
-  process.exit(statusCode);
+  process.exitCode = statusCode;
 }
