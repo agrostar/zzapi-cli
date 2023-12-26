@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import { Command } from "commander";
 
 import { initRawRequest } from "./utils/requestUtils";
@@ -16,7 +18,9 @@ program
   .parse(process.argv);
 const options = program.opts();
 
-// the request
+// create the raw request
 const pathArg = program.args[0];
 initRawRequest(pathArg, options.suppress === true, options.req, options.env);
+
+// finally, call the request
 callRequests("1.0.0", options.req);

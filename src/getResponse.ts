@@ -15,6 +15,7 @@ import {
   C_WARN,
   C_WARN_TEXT,
 } from "./utils/colours";
+import { setStatusCode } from "./utils/errors";
 
 function formatTestResults(results: TestResult[]): string {
   const resultLines: string[] = [];
@@ -44,11 +45,11 @@ export async function allRequestsWithProgress(allRequests: {
 
   for (const name in allRequests) {
     const reqNameMessage = `Running ${name}`;
-    process.stdout.write(C_LOADING(`${reqNameMessage}\r`));
+    process.stderr.write(C_LOADING(`${reqNameMessage}\r`));
     let dots = "";
     let reqTimer = setInterval(() => {
       dots += ".";
-      process.stdout.write(C_LOADING(`\r${reqNameMessage}${dots}`));
+      process.stderr.write(C_LOADING(`\r${reqNameMessage}${dots}`));
     }, 1000);
 
     let requestData = allRequests[name];
@@ -86,7 +87,8 @@ export async function allRequestsWithProgress(allRequests: {
           C_WARN(`[warn]`) +
           C_WARN_TEXT(` Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
       }
-      process.stdout.write(`\r${message}\n`);
+      process.stderr.write(`\r${message}\n`);
+      setStatusCode(1);
       continue;
     }
 
@@ -119,7 +121,8 @@ export async function allRequestsWithProgress(allRequests: {
         C_ERR_TEXT(
           `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
-      process.stdout.write(`\r${message}\n`);
+      process.stderr.write(`\r${message}\n`);
+      setStatusCode(1);
       continue;
     }
 
@@ -140,6 +143,7 @@ export async function allRequestsWithProgress(allRequests: {
 
     if (all != passed) {
       message += formatTestResults(results) + "\n";
+      setStatusCode(1);
     }
 
     const captureOutput = captureVariables(requestData, response);
@@ -156,7 +160,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?\n`);
     }
 
-    process.stdout.write(`\r${message}`);
+    process.stderr.write(`\r${message}`);
   }
   return responses;
 }

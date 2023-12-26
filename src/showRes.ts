@@ -82,22 +82,8 @@ function getDataOfIndReqAsString(
  * @returns (void)
  */
 function showContent(bodyContent: string, headersContent: string, showHeaders: boolean, name?: string) {
-  let bodyLanguage: string | undefined;
-  bodyLanguage = "json";
-  try {
-    JSON.parse(bodyContent);
-  } catch {
-    bodyLanguage = undefined;
-  }
-
-  if (!getRawRequest().suppress) {
-    console.log(`----------\nbody:\n${bodyContent}\n"----------`);
-  }
-
-  if (name) {
-    if (showHeaders) {
-      const message = "----------\n" + headersContent + "\n----------\n";
-      console.log(message);
-    }
-  }
+  // showing the body
+  if (!getRawRequest().suppress) console.log(bodyContent);
+  // showing the headers
+  if (name && showHeaders) console.error("----------\n" + headersContent + "\n----------\n");
 }

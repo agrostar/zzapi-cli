@@ -6,10 +6,13 @@ import { loadVariables } from "zzapi";
 
 import { getRawRequest } from "./utils/requestUtils";
 
-import { openEditorForIndividualReq as showContentForIndividualReq, openEditorForAllRequests as showContentForAllReqs } from "./showRes";
+import {
+  openEditorForIndividualReq as showContentForIndividualReq,
+  openEditorForAllRequests as showContentForAllReqs,
+} from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
-import { throwError } from "./utils/errors";
+import { statusCode, throwError } from "./utils/errors";
 
 async function runRequests(
   requests: { [name: string]: RequestSpec },
@@ -85,4 +88,7 @@ export async function callRequests(extensionVersion: string, name?: string): Pro
     }
   }
   await runRequests(allRequests, extensionVersion);
+
+  console.error(`\nexiting with status ${statusCode}`);
+  process.exit(statusCode);
 }

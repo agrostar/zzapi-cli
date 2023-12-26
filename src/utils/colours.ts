@@ -1,18 +1,16 @@
-import chalk from "chalk";
+import chalkStderr from "chalk";
 
-export const C_LOADING = chalk.blue.italic; // loading
-export const C_TIME = chalk.magenta.italic.underline; // time
+export const C_LOADING = chalkStderr.blue.italic; // loading
+export const C_TIME = chalkStderr.magenta.italic.underline; // time
 
 // error
-export const C_ERR = chalk.red;
-export const C_ERR_TEXT = chalk.red.bold;
+export const C_ERR = chalkStderr.red;
+export const C_ERR_TEXT = chalkStderr.red.bold;
 
 // success
-export const C_SUC = chalk.green;
-export const C_SUC_TEXT = chalk.green.bold;
+export const C_SUC = chalkStderr.green;
+export const C_SUC_TEXT = chalkStderr.green.bold;
 
 // warning
-export const C_WARN = chalk.yellow;
-export const C_WARN_TEXT = chalk.yellow.bold;
-
-
+export const C_WARN = chalkStderr.yellow;
+export const C_WARN_TEXT = chalkStderr.yellow.bold;
