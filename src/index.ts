@@ -18,5 +18,5 @@ const options = program.opts();
 
 // the request
 const pathArg = program.args[0];
-initRawRequest(pathArg, options.suppress === true, options.request, options.env);
-callRequests("1.0.0", options.request);
+initRawRequest(pathArg, options.suppress === true, options.req, options.env);
+callRequests("1.0.0", options.req);

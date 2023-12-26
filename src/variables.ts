@@ -3,6 +3,7 @@ import * as path from "path";
 
 import { getEnvironments } from "zzapi";
 import { VarStore } from "zzapi";
+import { getRawRequest } from "./utils/requestUtils";
 
 const VARFILE_EXTENSION = ".zzv";
 
@@ -40,7 +41,7 @@ export function replaceFileContentsInString(doc: string): string {
   const fileRegex = /file:\/\/([^\s]+)/g;
 
   return doc.replace(fileRegex, (_, givenFilePath) => {
-    const filePath = path.resolve(givenFilePath);
+    const filePath = path.resolve(path.dirname(getRawRequest().bundle.bundlePath), givenFilePath);
     return fs.readFileSync(filePath, "utf-8");
   });
 }
