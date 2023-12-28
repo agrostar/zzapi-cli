@@ -5,6 +5,8 @@ import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
 import { getRawRequest } from "./utils/requestUtils";
+import { statusCode, throwError } from "./utils/errors";
+import { C_WARN } from "./utils/colours";
 
 import {
   openEditorForIndividualReq as showContentForIndividualReq,
@@ -12,8 +14,6 @@ import {
 } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
-import { statusCode, throwError } from "./utils/errors";
-import { C_WARN } from "./utils/colours";
 
 async function runRequests(
   requests: { [name: string]: RequestSpec },
