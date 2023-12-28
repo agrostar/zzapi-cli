@@ -13,6 +13,7 @@ import {
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
 import { statusCode, throwError } from "./utils/errors";
+import { C_WARN } from "./utils/colours";
 
 async function runRequests(
   requests: { [name: string]: RequestSpec },
@@ -20,14 +21,18 @@ async function runRequests(
 ): Promise<void> {
   try {
     const env = getRawRequest().envName;
-    const loadedVariables = !env
-      ? []
+    const loadedVariables: { [key: string]: any } = !env
+      ? {}
       : loadVariables(
           env,
           getRawRequest().bundle.bundleContents,
           getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
         );
-    getVarStore().setLoadedVariables(loadedVariables);
+    if (env && Object.keys(loadedVariables).length < 1) {
+      console.error(C_WARN(`warning: no variables added from the ${env} env. Does it exist?`));
+    } else {
+      getVarStore().setLoadedVariables(loadedVariables);
+    }
   } catch (err: any) {
     throwError(err);
     return;

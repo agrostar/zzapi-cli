@@ -17,13 +17,13 @@ program
   .argument("<path/to/bundle>", "The bundle whose requests to run")
   .option("--req <req-name>", "Run a request of a particular name")
   .option("--env <env-name>", "Run the request in a particular environment")
-  .option("--suppress", "Suppress the body output in the terminal")
+  .option("--expand", "Show the body output in the terminal")
   .parse(process.argv);
 const options = program.opts();
 
 // create the raw request
 const pathArg = program.args[0];
-initRawRequest(pathArg, options.suppress === true, options.req, options.env);
+initRawRequest(pathArg, options.expand === true, options.req, options.env);
 
 // finally, call the request
 callRequests(VERSION);

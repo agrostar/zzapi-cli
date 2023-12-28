@@ -83,7 +83,7 @@ function getDataOfIndReqAsString(
  */
 function showContent(bodyContent: string, headersContent: string, showHeaders: boolean, name?: string) {
   // showing the body
-  if (!getRawRequest().suppress) console.log(bodyContent);
+  if (getRawRequest().expand) console.log(bodyContent);
   // showing the headers
   if (name && showHeaders) console.error("----------\n" + headersContent + "\n----------\n");
 }
