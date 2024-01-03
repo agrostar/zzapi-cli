@@ -51,20 +51,16 @@ async function runRequests(
   }
 
   const responses = await allRequestsWithProgress(requests);
-  if(responses.length < 1) return;
 
-  if (Object.keys(requests).length > 1) {
+  if (responses.length < 1) return;
+  // if requestName is not set, then it is meant to be a run-all requests, else run-one
+  if (!getRawRequest().requestName) {
     await showContentForAllReqs(responses);
-  } else if (Object.keys(requests).length === 1) {
-    const name = Object.keys(requests)[0];
-    const theRequest = requests[name];
-    const theResponse = responses[0].response;
-    await showContentForIndividualReq(
-      theResponse,
-      name,
-      theRequest.options.keepRawJSON,
-      theRequest.options.showHeaders
-    );
+  } else {
+    const name = responses[0].name;
+    const req = requests[name];
+    const resp = responses[0].response;
+    await showContentForIndividualReq(resp, name, req.options.keepRawJSON, req.options.showHeaders);
   }
 }
 
