@@ -15,29 +15,10 @@ import {
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
 
-async function runRequests(
+async function runRequestSpecs(
   requests: { [name: string]: RequestSpec },
   extensionVersion: string
 ): Promise<void> {
-  try {
-    const env = getRawRequest().envName;
-    const loadedVariables: { [key: string]: any } = !env
-      ? {}
-      : loadVariables(
-          env,
-          getRawRequest().bundle.bundleContents,
-          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
-        );
-    if (env && Object.keys(loadedVariables).length < 1) {
-      console.error(C_WARN(`warning: no variables added from the ${env} env. Does it exist?`));
-    } else {
-      getVarStore().setLoadedVariables(loadedVariables);
-    }
-  } catch (err: any) {
-    throwError(err);
-    return;
-  }
-
   for (const name in requests) {
     const request = requests[name];
 
@@ -65,25 +46,35 @@ async function runRequests(
 }
 
 export async function callRequests(extensionVersion: string): Promise<void> {
-  const name = getRawRequest().requestName;
+  // load the variables
+  try {
+    const env = getRawRequest().envName;
+    const loadedVariables: { [key: string]: any } = !env
+      ? {}
+      : loadVariables(
+          env,
+          getRawRequest().bundle.bundleContents,
+          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
+        );
+    if (env && Object.keys(loadedVariables).length < 1)
+      console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
+    getVarStore().setLoadedVariables(loadedVariables);
+  } catch (err: any) {
+    throwError(err);
+    return;
+  }
+
+  // run the requests
+  const name = getRawRequest().requestName,
+    content = replaceFileContentsInString(getRawRequest().bundle.bundleContents);
 
   let allRequests: { [name: string]: RequestSpec };
-  const content = replaceFileContentsInString(getRawRequest().bundle.bundleContents);
-  if (name) {
-    try {
-      const request: RequestSpec = getRequestSpec(content, name);
-      allRequests = { [name]: request };
-    } catch (err: any) {
-      throwError(err);
-      return;
-    }
-  } else {
-    try {
-      allRequests = getAllRequestSpecs(content);
-    } catch (err: any) {
-      throwError(err);
-      return; // just so TS knows that allRequests is always being assigned
-    }
+  try {
+    allRequests = name ? { [name]: getRequestSpec(content, name) } : getAllRequestSpecs(content);
+  } catch (err: any) {
+    throwError(err);
+    return;
   }
-  await runRequests(allRequests, extensionVersion);
+
+  await runRequestSpecs(allRequests, extensionVersion);
 }
