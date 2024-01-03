@@ -4,9 +4,9 @@ import { Command } from "commander";
 
 import { initRawRequest } from "./utils/requestUtils";
 import { LIB_VERSION } from "./utils/version";
+import { getStatusCode } from "./utils/errors";
 
 import { callRequests } from "./runRequests";
-import { getStatusCode } from "./utils/errors";
 
 const VERSION: string = LIB_VERSION;
 
@@ -15,7 +15,7 @@ program
   .allowExcessArguments(false)
   .version(VERSION, "-v, --version", "show the current version")
   .description("CLI for zzAPI - an API testing framework")
-  .argument("<path/to/bundle>", "The bundle whose requests to run")
+  .argument("<path-to-bundle>", "The bundle whose requests to run")
   .option("-r, --req <req-name>", "Run a request of a particular name")
   .option("-e, --env <env-name>", "Run the request in a particular environment")
   .option("--expand", "Show the body output in the terminal")
