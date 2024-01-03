@@ -6,6 +6,7 @@ import { initRawRequest } from "./utils/requestUtils";
 import { LIB_VERSION } from "./utils/version";
 
 import { callRequests } from "./runRequests";
+import { getStatusCode } from "./utils/errors";
 
 const VERSION: string = LIB_VERSION;
 
@@ -19,12 +20,19 @@ program
   .option("-e, --env <env-name>", "Run the request in a particular environment")
   .option("--expand", "Show the body output in the terminal")
   .parse(process.argv);
-const options = program.opts();
-// console.log(options);
 
-// create the raw request
-const pathArg = program.args[0];
-initRawRequest(pathArg, options.expand === true, options.req, options.env);
+async function main() {
+  const options = program.opts();
+  // console.log(options);
 
-// finally, call the request
-callRequests(VERSION);
+  // create the raw request
+  const pathArg = program.args[0];
+  initRawRequest(pathArg, options.expand === true, options.req, options.env);
+  if (getStatusCode() > 0) return;
+
+  // finally, call the request
+  await callRequests(VERSION);
+  if (getStatusCode() > 0) return;
+}
+
+main();

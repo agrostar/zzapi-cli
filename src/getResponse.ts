@@ -15,7 +15,7 @@ import {
   C_WARN,
   C_WARN_TEXT,
 } from "./utils/colours";
-import { setStatusCode, statusCode } from "./utils/errors";
+import { getStatusCode } from "./utils/errors";
 
 function formatTestResults(results: TestResult[]): string {
   const resultLines: string[] = [];
@@ -88,7 +88,7 @@ export async function allRequestsWithProgress(allRequests: {
           C_WARN_TEXT(` Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
       }
       process.stderr.write(`\r${message}\n`);
-      setStatusCode(statusCode + 1);
+      process.exitCode = getStatusCode() + 1;
       continue;
     }
 
@@ -122,7 +122,7 @@ export async function allRequestsWithProgress(allRequests: {
           `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
       process.stderr.write(`\r${message}\n`);
-      setStatusCode(statusCode + 1);
+      process.exitCode = getStatusCode() + 1;
       continue;
     }
 
@@ -143,7 +143,7 @@ export async function allRequestsWithProgress(allRequests: {
 
     if (all != passed) {
       message += formatTestResults(results) + "\n";
-      setStatusCode(statusCode + 1);
+      process.exitCode = getStatusCode() + 1;
     }
 
     const captureOutput = captureVariables(requestData, response);

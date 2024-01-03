@@ -5,7 +5,7 @@ import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
 import { getRawRequest } from "./utils/requestUtils";
-import { statusCode, throwError } from "./utils/errors";
+import { throwError } from "./utils/errors";
 import { C_WARN } from "./utils/colours";
 
 import {
@@ -50,21 +50,15 @@ async function runRequests(
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
   }
 
-  const allResponses = await allRequestsWithProgress(requests);
-  let responses: Array<{ name: string; response: ResponseData }> = [];
-
-  allResponses.forEach((ResponseData) => {
-    const response = ResponseData.response;
-    const name = ResponseData.name;
-    responses.push({ name: name, response: response });
-  });
+  const responses = await allRequestsWithProgress(requests);
+  if(responses.length < 1) return;
 
   if (Object.keys(requests).length > 1) {
     await showContentForAllReqs(responses);
   } else if (Object.keys(requests).length === 1) {
     const name = Object.keys(requests)[0];
     const theRequest = requests[name];
-    const theResponse = allResponses[0].response;
+    const theResponse = responses[0].response;
     await showContentForIndividualReq(
       theResponse,
       name,
@@ -96,7 +90,4 @@ export async function callRequests(extensionVersion: string): Promise<void> {
     }
   }
   await runRequests(allRequests, extensionVersion);
-
-  // console.error(`\nexiting with status ${statusCode}`);
-  process.exitCode = statusCode;
 }
