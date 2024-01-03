@@ -97,6 +97,6 @@ export async function callRequests(extensionVersion: string): Promise<void> {
   }
   await runRequests(allRequests, extensionVersion);
 
-  console.error(`\nexiting with status ${statusCode}`);
+  // console.error(`\nexiting with status ${statusCode}`);
   process.exitCode = statusCode;
 }
