@@ -5,9 +5,9 @@ import { Command } from "commander";
 import { initRawRequest } from "./utils/requestUtils";
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { getStatusCode } from "./utils/errors";
+import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
 
 import { callRequests } from "./runRequests";
-import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
 
 const program = new Command();
 program

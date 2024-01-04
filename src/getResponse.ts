@@ -45,6 +45,13 @@ export async function allRequestsWithProgress(allRequests: {
   let responses: Array<{ name: string; response: ResponseData }> = [];
 
   for (const name in allRequests) {
+    let requestData = allRequests[name];
+    const method = requestData.httpRequest.method;
+
+    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body);
+    const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
+    currHttpRequest = constructGotRequest(requestData);
+
     const reqNameMessage = `Running ${name}`;
     process.stderr.write(C_LOADING(`${reqNameMessage}\r`));
     let dots = "";
@@ -52,13 +59,6 @@ export async function allRequestsWithProgress(allRequests: {
       dots += ".";
       process.stderr.write(C_LOADING(`\r${reqNameMessage}${dots}`));
     }, 1000);
-
-    let requestData = allRequests[name];
-    const method = requestData.httpRequest.method;
-
-    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body);
-    const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
-    currHttpRequest = constructGotRequest(requestData);
 
     const {
       response: httpResponse,
@@ -121,7 +121,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
       process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;

@@ -20,9 +20,7 @@ async function runRequestSpecs(requests: { [name: string]: RequestSpec }): Promi
   for (const name in requests) {
     const request = requests[name];
 
-    const autoHeaders: { [key: string]: string } = {
-      "user-agent": "zzAPI-cli/" + CLI_VERSION,
-    };
+    const autoHeaders: { [key: string]: string } = { "user-agent": "zzAPI-cli/" + CLI_VERSION };
     if (request.httpRequest.body && typeof request.httpRequest.body == "object")
       autoHeaders["content-type"] = "application/json";
 
@@ -52,7 +50,7 @@ export async function callRequests(): Promise<void> {
       : loadVariables(
           env,
           getRawRequest().bundle.bundleContents,
-          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath)),
+          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
         );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
