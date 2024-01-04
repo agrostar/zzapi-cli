@@ -9,7 +9,7 @@ export async function openEditorForIndividualReq(
   responseData: ResponseData,
   name: string,
   keepRawJSON: boolean,
-  showHeaders: boolean
+  showHeaders: boolean,
 ): Promise<void> {
   const { contentData, headersData } = getDataOfIndReqAsString(responseData, name, keepRawJSON);
   showContent(contentData, headersData, showHeaders, name);
@@ -27,7 +27,7 @@ function attemptDataParse(content: string): object | undefined {
 
 export async function openEditorForAllRequests(
   responses: Array<{ response: ResponseData; name: string }>,
-  keepRawJSON?: boolean
+  keepRawJSON?: boolean,
 ): Promise<void> {
   let allResponses: { [key: string]: any } = {};
 
@@ -35,7 +35,7 @@ export async function openEditorForAllRequests(
     let contentData = getDataOfIndReqAsString(
       responseObj.response,
       responseObj.name,
-      keepRawJSON
+      keepRawJSON,
     ).contentData;
 
     let parsedData = attemptDataParse(contentData);
@@ -48,7 +48,7 @@ export async function openEditorForAllRequests(
 function getDataOfIndReqAsString(
   responseData: ResponseData,
   name: string,
-  keepRawJSON?: boolean
+  keepRawJSON?: boolean,
 ): { contentData: string; headersData: string } {
   let currentEnvironment: string = (getRawRequest().envName ? getRawRequest().envName : "") as string;
 

@@ -9,18 +9,15 @@ import { getStatusCode } from "./utils/errors";
 import { callRequests } from "./runRequests";
 import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
 
-const VERSION: string = CLI_VERSION;
-const NAME: string = CLI_NAME;
-
 const program = new Command();
 program
-  .showHelpAfterError(C_WARN_TEXT(`(enter ${NAME} -h for usage information)`))
+  .showHelpAfterError(C_WARN_TEXT(`(enter ${CLI_NAME} -h for usage information)`))
   .allowExcessArguments(false)
   .configureOutput({
     writeErr: (str) => process.stderr.write(str),
     outputError: (str, write) => write(C_ERR_TEXT(str)),
   })
-  .version(VERSION, "-v, --version", "show the current version")
+  .version(CLI_VERSION, "-v, --version", "show the current version")
   .description("CLI for zzAPI - an API testing framework")
   .argument("<path-to-bundle>", "The bundle whose requests to run")
   .option("-r, --req <req-name>", "Run a request of a particular name")
@@ -37,7 +34,7 @@ async function main() {
   if (getStatusCode() > 0) return;
 
   // finally, call the request
-  await callRequests(VERSION);
+  await callRequests();
 }
 
 main();

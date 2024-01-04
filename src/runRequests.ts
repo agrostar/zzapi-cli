@@ -7,23 +7,21 @@ import { loadVariables } from "zzapi";
 import { getRawRequest } from "./utils/requestUtils";
 import { throwError } from "./utils/errors";
 import { C_WARN } from "./utils/colours";
+import { CLI_VERSION } from "./utils/version";
 
 import {
   openEditorForIndividualReq as showContentForIndividualReq,
   openEditorForAllRequests as showContentForAllReqs,
 } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
-import { getVarFileContents, getVarStore, replaceFileContentsInString } from "./variables";
+import { getVarFileContents, getVarStore } from "./variables";
 
-async function runRequestSpecs(
-  requests: { [name: string]: RequestSpec },
-  extensionVersion: string
-): Promise<void> {
+async function runRequestSpecs(requests: { [name: string]: RequestSpec }): Promise<void> {
   for (const name in requests) {
     const request = requests[name];
 
     const autoHeaders: { [key: string]: string } = {
-      "user-agent": "zzAPI-cli/" + extensionVersion,
+      "user-agent": "zzAPI-cli/" + CLI_VERSION,
     };
     if (request.httpRequest.body && typeof request.httpRequest.body == "object")
       autoHeaders["content-type"] = "application/json";
@@ -45,7 +43,7 @@ async function runRequestSpecs(
   }
 }
 
-export async function callRequests(extensionVersion: string): Promise<void> {
+export async function callRequests(): Promise<void> {
   // load the variables
   try {
     const env = getRawRequest().envName;
@@ -54,7 +52,7 @@ export async function callRequests(extensionVersion: string): Promise<void> {
       : loadVariables(
           env,
           getRawRequest().bundle.bundleContents,
-          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
+          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath)),
         );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
@@ -66,7 +64,7 @@ export async function callRequests(extensionVersion: string): Promise<void> {
 
   // run the requests
   const name = getRawRequest().requestName,
-    content = replaceFileContentsInString(getRawRequest().bundle.bundleContents);
+    content = getRawRequest().bundle.bundleContents;
 
   let allRequests: { [name: string]: RequestSpec };
   try {
@@ -76,5 +74,5 @@ export async function callRequests(extensionVersion: string): Promise<void> {
     return;
   }
 
-  await runRequestSpecs(allRequests, extensionVersion);
+  await runRequestSpecs(allRequests);
 }

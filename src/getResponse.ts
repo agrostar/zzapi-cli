@@ -16,6 +16,7 @@ import {
   C_WARN_TEXT,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
+import { replaceFileContents } from "./fileContents";
 
 function formatTestResults(results: TestResult[]): string {
   const resultLines: string[] = [];
@@ -55,6 +56,7 @@ export async function allRequestsWithProgress(allRequests: {
     let requestData = allRequests[name];
     const method = requestData.httpRequest.method;
 
+    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body);
     const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
     currHttpRequest = constructGotRequest(requestData);
 
@@ -119,7 +121,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
         );
       process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;

@@ -19,7 +19,7 @@ export function initRawRequest(
   relPath: string,
   expand: boolean,
   requestName?: string,
-  envName?: string
+  envName?: string,
 ) {
   req = new RawRequest(relPath, expand, requestName, envName);
 }
