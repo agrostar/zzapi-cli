@@ -3,16 +3,23 @@
 import { Command } from "commander";
 
 import { initRawRequest } from "./utils/requestUtils";
-import { LIB_VERSION } from "./utils/version";
+import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { getStatusCode } from "./utils/errors";
 
 import { callRequests } from "./runRequests";
+import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
 
-const VERSION: string = LIB_VERSION;
+const VERSION: string = CLI_VERSION;
+const NAME: string = CLI_NAME;
 
 const program = new Command();
 program
+  .showHelpAfterError(C_WARN_TEXT(`(enter ${NAME} -h for usage information)`))
   .allowExcessArguments(false)
+  .configureOutput({
+    writeErr: (str) => process.stderr.write(str),
+    outputError: (str, write) => write(C_ERR_TEXT(str)),
+  })
   .version(VERSION, "-v, --version", "show the current version")
   .description("CLI for zzAPI - an API testing framework")
   .argument("<path-to-bundle>", "The bundle whose requests to run")
@@ -23,7 +30,6 @@ program
 
 async function main() {
   const options = program.opts();
-  // console.log(options);
 
   // create the raw request
   const pathArg = program.args[0];
@@ -32,7 +38,6 @@ async function main() {
 
   // finally, call the request
   await callRequests(VERSION);
-  if (getStatusCode() > 0) return;
 }
 
 main();
