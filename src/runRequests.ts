@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { RequestSpec, ResponseData } from "zzapi";
+import { RequestSpec, ResponseData, Variables } from "zzapi";
 import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
@@ -45,13 +45,11 @@ export async function callRequests(): Promise<void> {
   // load the variables
   try {
     const env = getRawRequest().envName;
-    const loadedVariables: { [key: string]: any } = !env
-      ? {}
-      : loadVariables(
-          env,
-          getRawRequest().bundle.bundleContents,
-          getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
-        );
+    const loadedVariables: Variables = loadVariables(
+      env,
+      getRawRequest().bundle.bundleContents,
+      getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
+    );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
     getVarStore().setLoadedVariables(loadedVariables);
