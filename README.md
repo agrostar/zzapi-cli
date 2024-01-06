@@ -26,6 +26,8 @@ It accepts the following options:
 - `--expand` shows the body output of the request in the terminal
 - `-h` or `--help` displays help for the command
 
-A sample bundle you may test it on [can be found in the zzapi repo](https://github.com/agrostar/zzapi/blob/e3bf60833009f1c51f4a7e0233b65a0dd8116a29/examples/tests-bundle.zzb). 
+A sample bundle you may test it on [can be found in the zzapi repo](https://github.com/agrostar/zzapi/blob/e3bf60833009f1c51f4a7e0233b65a0dd8116a29/examples/tests-bundle.zzb) (containing the zzapi node module). 
 
 __Note__ the CLI returns the number of requests that failed in the execution of the API requests, to aid in testing. 
+
+For more robust API testing features with a simple GUI, [check out the zzAPI VSCode extension](https://marketplace.visualstudio.com/items?itemName=AgroStar.zzapi)!
