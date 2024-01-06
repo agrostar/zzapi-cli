@@ -184,10 +184,8 @@ function getHeadersAsString(rawHeaders: string[]): string {
   }
 
   const numElement = rawHeaders.length;
-  for (let i = 0; i < numElement - 1; i += 2) {
+  for (let i = 0; i < numElement - 1; i += 2)
     formattedString += `  ${rawHeaders[i]} : ${getStrictStringValue(rawHeaders[i + 1])}\n`;
-  }
 
-  formattedString = formattedString.trim();
-  return `\n  ${formattedString}`;
+  return `\n  ${formattedString.trim()}`;
 }

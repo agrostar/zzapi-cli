@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { RequestSpec, ResponseData, Variables } from "zzapi";
+import { RequestSpec, Variables } from "zzapi";
 import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
@@ -9,10 +9,7 @@ import { throwError } from "./utils/errors";
 import { C_WARN } from "./utils/colours";
 import { CLI_VERSION } from "./utils/version";
 
-import {
-  openEditorForIndividualReq as showContentForIndividualReq,
-  openEditorForAllRequests as showContentForAllReqs,
-} from "./showRes";
+import { showContentForIndReq, showContentForAllReq } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore } from "./variables";
 
@@ -32,12 +29,12 @@ async function runRequestSpecs(requests: { [name: string]: RequestSpec }): Promi
   if (responses.length < 1) return;
   // if requestName is not set, then it is meant to be a run-all requests, else run-one
   if (!getRawRequest().requestName) {
-    await showContentForAllReqs(responses);
+    await showContentForAllReq(responses);
   } else {
     const name = responses[0].name;
     const req = requests[name];
     const resp = responses[0].response;
-    await showContentForIndividualReq(resp, name, req.options.keepRawJSON, req.options.showHeaders);
+    await showContentForIndReq(resp, name, req.options.keepRawJSON, req.options.showHeaders);
   }
 }
 
