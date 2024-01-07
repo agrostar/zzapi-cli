@@ -2,37 +2,19 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { getRawRequest } from "./utils/requestUtils";
-import { isDict } from "./utils/typeUtils";
 
-function replaceFileContentsInDict(body: { [key: string]: any }): { [key: string]: any } {
-  let res: { [key: string]: any } = {};
-  Object.keys(body).forEach((key) => (res[key] = replaceFileContents(body[key])));
-  return res;
-}
+export function replaceFileContents<T>(body: T): T {
+  if (typeof body !== "string") return body;
 
-function replaceFileContentsInArray(body: any[]): any[] {
-  let res: any[] = [];
-  body.forEach((item) => res.push(replaceFileContents(item)));
-  return res;
-}
-
-function replaceFileContentsInString(body: string): string {
+  /*
+  finds all file:// instances with atleast 1 succeeding word character
+  matches the file-name referred to by this instance
+  */
   const fileRegex = /file:\/\/([^\s]+)/g;
+  return body.replace(fileRegex, (match, givenFilePath) => {
+    if (match !== body) return match; // we only perform a replacement if file:// is the ENTIRE body
 
-  return body.replace(fileRegex, (_, givenFilePath) => {
     const filePath = path.resolve(path.dirname(getRawRequest().bundle.bundlePath), givenFilePath);
     return fs.readFileSync(filePath, "utf-8");
-  });
-}
-
-export function replaceFileContents(body: any): any {
-  if (isDict(body)) {
-    return replaceFileContentsInDict(body);
-  } else if (Array.isArray(body)) {
-    return replaceFileContentsInArray(body);
-  } else if (typeof body === "string") {
-    return replaceFileContentsInString(body);
-  } else {
-    return body;
-  }
+  }) as T & string;
 }
