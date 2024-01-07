@@ -17,7 +17,7 @@
   "dependencies": {
     "chalk": "4.1.2",
     "commander": "^11.1.0",
-    "zzapi": "^1.0.3"
+    "zzapi": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
