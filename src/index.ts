@@ -9,7 +9,7 @@ import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
 
 import { callRequests } from "./runRequests";
 
-const program = new Command();
+const program = new Command(CLI_NAME);
 program
   .showHelpAfterError(C_WARN_TEXT(`(enter ${CLI_NAME} -h for usage information)`))
   .allowExcessArguments(false)
