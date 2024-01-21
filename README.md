@@ -2,14 +2,12 @@
 
 zzAPI (prounounced like pizza, the syllables interchanged) is an HTTP (REST) API documentation and testing tool, a very simplified version of Postman. [See zzAPI core](https://github.com/agrostar/zzapi/) to learn about the zzAPI file formats (`.zzb` and `.zzv` files) and philosophy.
 
-This CLI makes it easy to test API requests in zzAPI bundles. 
+This CLI makes it easy to test API requests in zzAPI bundles. You can create and manually test API requests using [the zzAPI VSCode extension](https://marketplace.visualstudio.com/items?itemName=AgroStar.zzapi). To integrate the testing process into your CI/CD, you can use this module.
 
 ### Installation
-Currently, the CLI is still in the testing phase, and has not been deployed as a node module. If you wish to try it out, you may enter the following:
+
 ```bash
-npm i
-npm run build
-npm i -g
+npm i -g zzapi-cli
 ```
 
 ### Usage
