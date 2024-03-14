@@ -1,8 +1,7 @@
 import { C_ERR_TEXT } from "./colours";
 
 export function getStatusCode() {
-  if (!process.exitCode) process.exitCode = 0;
-  return process.exitCode;
+  return process.exitCode ?? 0;
 }
 
 export function throwError(message: any): void {

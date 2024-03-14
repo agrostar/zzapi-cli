@@ -1,0 +1,25 @@
+name: module testing 
+on: [push]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    name: prettier
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: build zzapi runner 
+        run: |
+          npm run build
+      - name: check full bundle
+        run: |
+          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default
+          if [ $? -ne 2 ]; then exit 1; fi
+      - name: assert failing requests
+        run: |
+          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-response
+          if [ $? -ne 1 ]; then exit 1; fi
+          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-schema
+          if [ $? -ne 1 ]; then exit 1; fi
