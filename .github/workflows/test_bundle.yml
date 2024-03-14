@@ -15,11 +15,8 @@ jobs:
           npm i
           npm run build
       - name: run full bundle check
-        continue-on-error: true
         run: |
           bash ./.github/workflows/test\ bundles/test_bundle.sh
-      - name: check full bundle run 
-        run: 
       - name: assert failing requests
         run: |
           bash ./.github/workflows/assert\ failing\ requests/assert_failing_requests.sh
