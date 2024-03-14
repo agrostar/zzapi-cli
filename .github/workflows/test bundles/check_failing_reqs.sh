@@ -2,3 +2,5 @@ node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env de
 if [ $? -ne 1 ]; then exit 1; fi
 node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-schema;
 if [ $? -ne 1 ]; then exit 1; fi
+
+# ensure that the expected requests are failing
