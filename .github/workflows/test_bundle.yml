@@ -12,6 +12,7 @@ jobs:
           node-version: "20"
       - name: build zzapi runner 
         run: |
+          npm i
           npm run build
       - name: check full bundle
         run: |
