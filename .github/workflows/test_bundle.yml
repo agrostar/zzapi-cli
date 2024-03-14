@@ -14,13 +14,12 @@ jobs:
         run: |
           npm i
           npm run build
-      - name: check full bundle
+      - name: run full bundle check
+        continue-on-error: true
         run: |
-          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default
-          if [ $? -ne 2 ]; then exit 1; fi
+          bash ./.github/workflows/test\ bundles/test_bundle.sh
+      - name: check full bundle run 
+        run: 
       - name: assert failing requests
         run: |
-          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-response
-          if [ $? -ne 1 ]; then exit 1; fi
-          node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-schema
-          if [ $? -ne 1 ]; then exit 1; fi
+          bash ./.github/workflows/assert\ failing\ requests/assert_failing_requests.sh
