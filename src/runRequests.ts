@@ -45,7 +45,7 @@ export async function callRequests(): Promise<void> {
     const loadedVariables: Variables = loadVariables(
       env,
       getRawRequest().bundle.bundleContents,
-      getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath))
+      getVarFileContents(path.dirname(getRawRequest().bundle.bundlePath)),
     );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
