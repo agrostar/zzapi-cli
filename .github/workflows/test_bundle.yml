@@ -19,4 +19,4 @@ jobs:
           bash ./.github/workflows/test\ bundles/test_bundle.sh
       - name: assert failing requests
         run: |
-          bash ./.github/workflows/test\ bundles/assert_failing_requests.sh
+          bash ./.github/workflows/test\ bundles/check_failing_reqs.sh
