@@ -1,6 +1,15 @@
 node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-response;
-if [ $? -ne 1 ]; then exit 1; fi
+exitCode=$?
+if [ $exitCode -ne 1 ]; then
+    echo "exit code is $exitCode, expected 1";
+    exit $exitCode; 
+fi
+
 node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-schema;
-if [ $? -ne 1 ]; then exit 1; fi
+exitCode=$?
+if [ $exitCode -ne 1 ]; then
+    echo "exit code is $exitCode, expected 1";
+    exit $exitCode; 
+fi
 
 # ensure that the expected requests are failing
