@@ -121,14 +121,14 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
       process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;
       continue;
     }
 
-    const results = runAllTests(requestData.tests, response);
+    const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
     const passed = results.filter((r) => r.pass).length;
     const all = results.length;
 
