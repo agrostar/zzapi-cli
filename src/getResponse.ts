@@ -42,7 +42,7 @@ export async function allRequestsWithProgress(
   allRequests: {
     [name: string]: RequestSpec;
   },
-  bundlePath: string
+  bundlePath: string,
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
@@ -124,7 +124,7 @@ export async function allRequestsWithProgress(
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
         );
       process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;

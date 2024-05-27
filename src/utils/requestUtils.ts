@@ -22,7 +22,7 @@ export function getRawRequest(
   relPath: string,
   expand: boolean,
   requestName?: string,
-  envName?: string
+  envName?: string,
 ): RawRequest {
   try {
     return new RawRequest(relPath, expand, requestName, envName);

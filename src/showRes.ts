@@ -11,7 +11,7 @@ export async function showContentForIndReq(
   keepRawJSON: boolean,
   showHeaders: boolean,
   env: string | undefined,
-  expand: boolean
+  expand: boolean,
 ): Promise<void> {
   const { contentData, headersData } = getDataOfIndReqAsString(responseData, name, env, keepRawJSON);
   showContent(contentData, headersData, showHeaders, expand, name);
@@ -31,7 +31,7 @@ export async function showContentForAllReq(
   responses: Array<{ response: ResponseData; name: string }>,
   env: string | undefined,
   expand: boolean,
-  keepRawJSON?: boolean
+  keepRawJSON?: boolean,
 ): Promise<void> {
   let allResponses: { [key: string]: any } = {};
 
@@ -40,7 +40,7 @@ export async function showContentForAllReq(
       responseObj.response,
       responseObj.name,
       env,
-      keepRawJSON
+      keepRawJSON,
     ).contentData;
 
     let parsedData = attemptDataParse(contentData);
@@ -54,7 +54,7 @@ function getDataOfIndReqAsString(
   responseData: ResponseData,
   name: string,
   env: string | undefined,
-  keepRawJSON?: boolean
+  keepRawJSON?: boolean,
 ): { contentData: string; headersData: string } {
   let currentEnvironment: string = env ?? "";
 
@@ -92,7 +92,7 @@ function showContent(
   headersContent: string,
   showHeaders: boolean,
   expand: boolean,
-  name?: string
+  name?: string,
 ) {
   // showing the body
   if (expand) console.log(bodyContent);
