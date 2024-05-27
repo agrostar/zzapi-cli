@@ -7,10 +7,14 @@ export class RawRequest {
   public bundle: Bundle;
 
   constructor(relPath: string, expand: boolean, requestName?: string, envName?: string) {
-    this.bundle = new Bundle(relPath);
-    this.requestName = requestName;
-    this.envName = envName;
-    this.expand = expand;
+    try {
+      this.bundle = new Bundle(relPath);
+      this.requestName = requestName;
+      this.envName = envName;
+      this.expand = expand;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
@@ -20,5 +24,9 @@ export function getRawRequest(
   requestName?: string,
   envName?: string
 ): RawRequest {
-  return new RawRequest(relPath, expand, requestName, envName);
+  try {
+    return new RawRequest(relPath, expand, requestName, envName);
+  } catch (error) {
+    throw error;
+  }
 }

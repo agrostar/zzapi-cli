@@ -1,5 +1,7 @@
 import chalkStderr from "chalk";
 
+export const C_PATH = chalkStderr.cyan; // path
+
 export const C_LOADING = chalkStderr.blue.italic; // loading
 export const C_TIME = chalkStderr.magenta.italic.underline; // time
 

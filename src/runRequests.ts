@@ -5,7 +5,6 @@ import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
 import { RawRequest } from "./utils/requestUtils";
-import { throwError } from "./utils/errors";
 import { C_WARN } from "./utils/colours";
 import { CLI_VERSION } from "./utils/version";
 
@@ -48,41 +47,33 @@ async function runRequestSpecs(
   }
 }
 
-export async function callRequests(requests: RawRequest[]): Promise<void> {
-  async function runRequest(request: RawRequest) {
-    try {
-      // load the variables
-      const env = request.envName;
-      const loadedVariables: Variables = loadVariables(
-        env,
-        request.bundle.bundleContents,
-        getVarFileContents(path.dirname(request.bundle.bundlePath))
-      );
-      if (env && Object.keys(loadedVariables).length < 1)
-        console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
-      getVarStore().setLoadedVariables(loadedVariables);
-    } catch (err: any) {
-      throwError(err);
-      return;
-    }
-
-    // create the request specs
-    const name = request.requestName,
-      content = request.bundle.bundleContents;
-
-    let allRequests: { [name: string]: RequestSpec };
-    try {
-      allRequests = name ? { [name]: getRequestSpec(content, name) } : getAllRequestSpecs(content);
-    } catch (err: any) {
-      throwError(err);
-      return;
-    }
-
-    // finally, run the request specs
-    await runRequestSpecs(allRequests, request);
+export async function callRequests(request: RawRequest): Promise<void> {
+  try {
+    // load the variables
+    const env = request.envName;
+    const loadedVariables: Variables = loadVariables(
+      env,
+      request.bundle.bundleContents,
+      getVarFileContents(path.dirname(request.bundle.bundlePath))
+    );
+    if (env && Object.keys(loadedVariables).length < 1)
+      console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
+    getVarStore().setLoadedVariables(loadedVariables);
+  } catch (err: any) {
+    throw err;
   }
 
-  requests.forEach(async (request) => {
-    runRequest(request);
-  });
+  // create the request specs
+  const name = request.requestName,
+    content = request.bundle.bundleContents;
+
+  let allRequests: { [name: string]: RequestSpec };
+  try {
+    allRequests = name ? { [name]: getRequestSpec(content, name) } : getAllRequestSpecs(content);
+  } catch (err: any) {
+    throw err;
+  }
+
+  // finally, run the request specs
+  await runRequestSpecs(allRequests, request);
 }
