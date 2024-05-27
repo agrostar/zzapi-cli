@@ -1,6 +1,6 @@
 import { Bundle } from "./bundleUtils";
 
-class RawRequest {
+export class RawRequest {
   public requestName: string | undefined = undefined;
   public envName: string | undefined = undefined;
   public expand: boolean = false;
@@ -14,15 +14,11 @@ class RawRequest {
   }
 }
 
-let req: RawRequest;
-export function initRawRequest(
+export function getRawRequest(
   relPath: string,
   expand: boolean,
   requestName?: string,
-  envName?: string,
-) {
-  req = new RawRequest(relPath, expand, requestName, envName);
-}
-export function getRawRequest(): RawRequest {
-  return req;
+  envName?: string
+): RawRequest {
+  return new RawRequest(relPath, expand, requestName, envName);
 }

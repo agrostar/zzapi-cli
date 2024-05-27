@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 
-import { initRawRequest } from "./utils/requestUtils";
+import { getRawRequest } from "./utils/requestUtils";
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { getStatusCode } from "./utils/errors";
 import { C_ERR_TEXT, C_WARN_TEXT } from "./utils/colours";
@@ -12,7 +12,7 @@ import { callRequests } from "./runRequests";
 const program = new Command(CLI_NAME);
 program
   .showHelpAfterError(C_WARN_TEXT(`(enter ${CLI_NAME} -h for usage information)`))
-  .allowExcessArguments(false)
+  .allowExcessArguments(true)
   .configureOutput({
     writeErr: (str) => process.stderr.write(str),
     outputError: (str, write) => write(C_ERR_TEXT(str)),
@@ -30,11 +30,11 @@ async function main() {
 
   // create the raw request
   const pathArg = program.args[0];
-  initRawRequest(pathArg, options.expand === true, options.req, options.env);
+  const rawReq = getRawRequest(pathArg, options.expand === true, options.req, options.env);
   if (getStatusCode() > 0) return;
 
   // finally, call the request
-  await callRequests();
+  await callRequests([rawReq]);
 }
 
 main();

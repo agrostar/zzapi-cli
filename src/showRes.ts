@@ -10,9 +10,11 @@ export async function showContentForIndReq(
   name: string,
   keepRawJSON: boolean,
   showHeaders: boolean,
+  env: string | undefined,
+  expand: boolean
 ): Promise<void> {
-  const { contentData, headersData } = getDataOfIndReqAsString(responseData, name, keepRawJSON);
-  showContent(contentData, headersData, showHeaders, name);
+  const { contentData, headersData } = getDataOfIndReqAsString(responseData, name, env, keepRawJSON);
+  showContent(contentData, headersData, showHeaders, expand, name);
 }
 
 function attemptDataParse(content: string): object | undefined {
@@ -27,7 +29,9 @@ function attemptDataParse(content: string): object | undefined {
 
 export async function showContentForAllReq(
   responses: Array<{ response: ResponseData; name: string }>,
-  keepRawJSON?: boolean,
+  env: string | undefined,
+  expand: boolean,
+  keepRawJSON?: boolean
 ): Promise<void> {
   let allResponses: { [key: string]: any } = {};
 
@@ -35,22 +39,24 @@ export async function showContentForAllReq(
     let contentData = getDataOfIndReqAsString(
       responseObj.response,
       responseObj.name,
-      keepRawJSON,
+      env,
+      keepRawJSON
     ).contentData;
 
     let parsedData = attemptDataParse(contentData);
     allResponses[responseObj.name] = parsedData ? parsedData : contentData;
   });
 
-  showContent(JSON.stringify(allResponses, undefined, 2), "", false);
+  showContent(JSON.stringify(allResponses, undefined, 2), "", false, expand);
 }
 
 function getDataOfIndReqAsString(
   responseData: ResponseData,
   name: string,
-  keepRawJSON?: boolean,
+  env: string | undefined,
+  keepRawJSON?: boolean
 ): { contentData: string; headersData: string } {
-  let currentEnvironment: string = (getRawRequest().envName ? getRawRequest().envName : "") as string;
+  let currentEnvironment: string = env ?? "";
 
   let contentData = "";
   let headersData = `${name}: headers\nenvironment: ${currentEnvironment}\n\n`;
@@ -81,9 +87,15 @@ function getDataOfIndReqAsString(
  *  response. Thus, any name === undefined test is to determine this.
  * @returns (void)
  */
-function showContent(bodyContent: string, headersContent: string, showHeaders: boolean, name?: string) {
+function showContent(
+  bodyContent: string,
+  headersContent: string,
+  showHeaders: boolean,
+  expand: boolean,
+  name?: string
+) {
   // showing the body
-  if (getRawRequest().expand) console.log(bodyContent);
+  if (expand) console.log(bodyContent);
   // showing the headers
   if (name && showHeaders) console.error("----------\n" + headersContent + "\n----------\n");
 }

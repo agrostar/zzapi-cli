@@ -38,9 +38,12 @@ function formatTestResults(results: TestResult[]): string {
   return resultLines.join("\n");
 }
 
-export async function allRequestsWithProgress(allRequests: {
-  [name: string]: RequestSpec;
-}): Promise<Array<{ name: string; response: ResponseData }>> {
+export async function allRequestsWithProgress(
+  allRequests: {
+    [name: string]: RequestSpec;
+  },
+  bundlePath: string
+): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
 
@@ -48,7 +51,7 @@ export async function allRequestsWithProgress(allRequests: {
     let requestData = allRequests[name];
     const method = requestData.httpRequest.method;
 
-    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body);
+    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body, bundlePath);
     const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
     currHttpRequest = constructGotRequest(requestData);
 
@@ -121,7 +124,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
       process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;

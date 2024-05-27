@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { getRawRequest } from "./utils/requestUtils";
 
-export function replaceFileContents<T>(body: T): T {
+export function replaceFileContents<T>(body: T, bundlePath: string): T {
   if (typeof body !== "string") return body;
 
   /*
@@ -14,7 +14,7 @@ export function replaceFileContents<T>(body: T): T {
   return body.replace(fileRegex, (match, givenFilePath) => {
     if (match !== body) return match; // we only perform a replacement if file:// is the ENTIRE body
 
-    const filePath = path.resolve(path.dirname(getRawRequest().bundle.bundlePath), givenFilePath);
+    const filePath = path.resolve(path.dirname(bundlePath), givenFilePath);
     return fs.readFileSync(filePath, "utf-8");
   }) as T & string;
 }
