@@ -1,3 +1,5 @@
+# ensure that the expected requests are failing
+
 node ./dist/index.js ./.github/workflows/test\ bundles/tests-bundle.zzb --env default --req tests-negative-response;
 exitCode=$?
 if [ $exitCode -ne 1 ]; then
@@ -12,4 +14,3 @@ if [ $exitCode -ne 1 ]; then
     exit $exitCode; 
 fi
 
-# ensure that the expected requests are failing

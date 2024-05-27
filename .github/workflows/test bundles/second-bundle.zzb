@@ -1,0 +1,29 @@
+common:
+  baseUrl: https://postman-echo.com
+  headers:
+    Content-type: application/json
+  tests:
+    status: 200
+    $h.Content-type: application/json; charset=utf-8
+
+
+requests:
+  simple-get: { method: GET, url: /get }
+
+  get-with-params:
+    method: GET
+    url: /get
+    params:
+      foo: bar
+    tests: # old way of specifying json tests
+      json:
+        $.args.foo: bar
+
+  get-with-params-no-value:
+    method: GET
+    url: /get
+    params:
+      foo1: bar1
+      foo2:
+    tests: # new way of specifying json
+      $.url: "https://postman-echo.com/get?foo1=bar1&foo2"
