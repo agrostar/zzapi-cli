@@ -1,4 +1,4 @@
-import { ResponseData, RequestSpec, GotRequest, TestResult } from "zzapi";
+import { ResponseData, RequestSpec, GotRequest, TestResult, SpecResult } from "zzapi";
 import { constructGotRequest, executeGotRequest } from "zzapi";
 import { runAllTests } from "zzapi";
 import { captureVariables } from "zzapi";
@@ -18,24 +18,81 @@ import {
 import { getStatusCode } from "./utils/errors";
 import { replaceFileContents } from "./fileContents";
 
-function formatTestResults(results: TestResult[]): string {
+function formatTestResults(results: TestResult[]): string[] {
   const resultLines: string[] = [];
   for (const r of results) {
     let line: string;
     if (r.pass) {
-      line = `\t` + C_SUC(`[INFO]`) + C_SUC_TEXT(` test ${r.spec}: expected ${r.op}: ${r.expected} OK`);
+      line = C_SUC(`[INFO]`) + C_SUC_TEXT(` test expected ${r.op}: ${r.expected} OK`);
     } else {
-      line =
-        `\t` +
-        C_ERR(`[FAIL]`) +
-        C_ERR_TEXT(` test ${r.spec}: expected ${r.op}: ${r.expected} | got ${r.received}`);
+      line = C_ERR(`[FAIL]`) + C_ERR_TEXT(` test expected ${r.op}: ${r.expected} | got ${r.received}`);
     }
-    if (r.message) {
-      line = `${line} [${r.message}]`;
-    }
+    if (r.message) line = `${line} [${r.message}]`;
+
     resultLines.push(line);
   }
-  return resultLines.join("\n");
+  return resultLines;
+}
+
+function getFormattedResult(
+  specRes: SpecResult,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  execTime: string | number
+): [string, number, number] {
+  function getResultData(res: SpecResult): [number, number] {
+    const rootResults = res.results;
+    let passed = rootResults.filter((r) => r.pass).length,
+      all = rootResults.length;
+
+    for (const s of res.subResults) {
+      const [subPassed, subAll] = getResultData(s);
+      passed += subPassed;
+      all += subAll;
+    }
+
+    return [passed, all];
+  }
+
+  const [passed, all] = getResultData(specRes);
+
+  let message: string =
+    C_TIME(`${new Date().toLocaleString()}`) +
+    (all === passed ? C_SUC(` [INFO]  `) : C_ERR(` [ERROR] `));
+
+  const passRatio = all === 0 ? "" : `tests: ${passed}/${all} passed`;
+  const testString = passed === all ? C_SUC_TEXT(passRatio) : C_ERR_TEXT(passRatio);
+  const summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${execTime} ${testString}`;
+
+  function getIndentedResult(res: SpecResult, indent: number = 1): string {
+    if (passed === all) return "";
+
+    const testResults = formatTestResults(res.results)
+      .map((r) => "\t".repeat(indent) + r)
+      .join("\n");
+    const specName = res.spec ? "\t".repeat(indent - 1) + res.spec : "";
+
+    const subRes: string[] = [];
+    for (const s of res.subResults) subRes.push(getIndentedResult(s, indent + 1));
+    const subResString = subRes.join("\n");
+
+    const dataElems: string[] = [];
+    if (specName.length > 0) dataElems.push(specName);
+    if (testResults.length > 0) dataElems.push(testResults);
+    if (subResString.length > 0) dataElems.push(subResString);
+
+    return dataElems.join("\n");
+  }
+
+  if (passed === all) {
+    message += C_SUC_TEXT(summaryString);
+  } else {
+    message += [C_ERR_TEXT(summaryString), getIndentedResult(specRes)].join("\n");
+  }
+
+  return [message + "\n", passed, all];
 }
 
 export async function allRequestsWithProgress(allRequests: {
@@ -68,6 +125,7 @@ export async function allRequestsWithProgress(allRequests: {
     } = await executeGotRequest(currHttpRequest);
 
     clearInterval(reqTimer);
+    process.stderr.write(`\r`);
 
     const response: ResponseData = {
       executionTime: executionTime + " ms",
@@ -89,7 +147,7 @@ export async function allRequestsWithProgress(allRequests: {
           C_WARN(`[warn]`) +
           C_WARN_TEXT(` Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
       }
-      process.stderr.write(`\r${message}\n`);
+      process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
       continue;
     }
@@ -121,32 +179,16 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
-      process.stderr.write(`\r${message}\n`);
+      process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
       continue;
     }
 
     const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
-    const passed = results.filter((r) => r.pass).length;
-    const all = results.length;
-
-    let message: string = "";
-    if (all == passed) {
-      message += C_TIME(`${new Date().toLocaleString()}`) + C_SUC(` [INFO]  `);
-    } else {
-      message += C_TIME(`${new Date().toLocaleString()}`) + C_ERR(` [ERROR] `);
-    }
-    let testString = all == 0 ? "" : `tests: ${passed}/${all} passed`;
-    testString = passed === all ? C_SUC_TEXT(testString) : C_ERR_TEXT(testString);
-    let summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${et} ${testString}\n`;
-    message += passed === all ? C_SUC_TEXT(summaryString) : C_ERR_TEXT(summaryString);
-
-    if (all != passed) {
-      message += formatTestResults(results) + "\n";
-      process.exitCode = getStatusCode() + 1;
-    }
+    let [message, passed, all] = getFormattedResult(results, method, name, status, size, et);
+    if (passed !== all) process.exitCode = getStatusCode() + 1;
 
     const captureOutput = captureVariables(requestData, response);
     const capturedVariables = captureOutput.capturedVars;
@@ -162,7 +204,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?\n`);
     }
 
-    process.stderr.write(`\r${message}`);
+    process.stderr.write(`${message}`);
   }
   return responses;
 }
