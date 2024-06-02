@@ -7,6 +7,7 @@ import { replaceVariablesInRequest } from "zzapi";
 import { getVarStore } from "./variables";
 import {
   C_ERR,
+  C_ERR_INFO,
   C_ERR_TEXT,
   C_LOADING,
   C_SUC,
@@ -14,6 +15,7 @@ import {
   C_TIME,
   C_WARN,
   C_WARN_TEXT,
+  C_SPEC,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
 import { replaceFileContents } from "./fileContents";
@@ -27,7 +29,7 @@ function formatTestResults(results: TestResult[]): string[] {
     } else {
       line = C_ERR(`[FAIL]`) + C_ERR_TEXT(` test expected ${r.op}: ${r.expected} | got ${r.received}`);
     }
-    if (r.message) line = `${line} [${r.message}]`;
+    if (r.message) line += C_ERR_INFO(`[${r.message}]`);
 
     resultLines.push(line);
   }
@@ -69,10 +71,10 @@ function getFormattedResult(
   function getIndentedResult(res: SpecResult, indent: number = 1): string {
     if (passed === all) return "";
 
+    const specName = C_SPEC(res.spec ? "\t".repeat(indent - 1) + res.spec : "");
     const testResults = formatTestResults(res.results)
       .map((r) => "\t".repeat(indent) + r)
       .join("\n");
-    const specName = res.spec ? "\t".repeat(indent - 1) + res.spec : "";
 
     const subRes: string[] = [];
     for (const s of res.subResults) subRes.push(getIndentedResult(s, indent + 1));
