@@ -42,7 +42,7 @@ function getFormattedResult(
   name: string,
   status: number | undefined,
   size: number,
-  execTime: string | number
+  execTime: string | number,
 ): [string, number, number] {
   function getResultData(res: SpecResult): [number, number] {
     const rootResults = res.results;
@@ -181,7 +181,7 @@ export async function allRequestsWithProgress(allRequests: {
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
         );
       process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
