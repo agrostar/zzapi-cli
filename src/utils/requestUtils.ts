@@ -1,28 +1,32 @@
 import { Bundle } from "./bundleUtils";
 
-class RawRequest {
+export class RawRequest {
   public requestName: string | undefined = undefined;
   public envName: string | undefined = undefined;
   public expand: boolean = false;
   public bundle: Bundle;
 
   constructor(relPath: string, expand: boolean, requestName?: string, envName?: string) {
-    this.bundle = new Bundle(relPath);
-    this.requestName = requestName;
-    this.envName = envName;
-    this.expand = expand;
+    try {
+      this.bundle = new Bundle(relPath);
+      this.requestName = requestName;
+      this.envName = envName;
+      this.expand = expand;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
-let req: RawRequest;
-export function initRawRequest(
+export function getRawRequest(
   relPath: string,
   expand: boolean,
   requestName?: string,
   envName?: string,
-) {
-  req = new RawRequest(relPath, expand, requestName, envName);
-}
-export function getRawRequest(): RawRequest {
-  return req;
+): RawRequest {
+  try {
+    return new RawRequest(relPath, expand, requestName, envName);
+  } catch (error) {
+    throw error;
+  }
 }

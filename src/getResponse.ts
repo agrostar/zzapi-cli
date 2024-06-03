@@ -97,9 +97,12 @@ function getFormattedResult(
   return [message + "\n", passed, all];
 }
 
-export async function allRequestsWithProgress(allRequests: {
-  [name: string]: RequestSpec;
-}): Promise<Array<{ name: string; response: ResponseData }>> {
+export async function allRequestsWithProgress(
+  allRequests: {
+    [name: string]: RequestSpec;
+  },
+  bundlePath: string,
+): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
 
@@ -107,7 +110,7 @@ export async function allRequestsWithProgress(allRequests: {
     let requestData = allRequests[name];
     const method = requestData.httpRequest.method;
 
-    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body);
+    requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body, bundlePath);
     const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
     currHttpRequest = constructGotRequest(requestData);
 

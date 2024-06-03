@@ -20,3 +20,6 @@ jobs:
       - name: assert failing requests
         run: |
           bash ./.github/workflows/test\ bundles/check_failing_reqs.sh
+      - name: checking for multiple bundles in a single command
+        run: |
+          bash ./.github/workflows/test\ bundles/multiple_bundles.sh
