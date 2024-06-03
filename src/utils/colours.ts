@@ -3,9 +3,12 @@ import chalkStderr from "chalk";
 export const C_LOADING = chalkStderr.blue.italic; // loading
 export const C_TIME = chalkStderr.magenta.italic.underline; // time
 
+export const C_SPEC = chalkStderr.white.bold.italic; // spec
+
 // error
 export const C_ERR = chalkStderr.red.bold;
 export const C_ERR_TEXT = chalkStderr.red;
+export const C_ERR_INFO = chalkStderr.red.bold.italic;
 
 // success
 export const C_SUC = chalkStderr.green.bold;

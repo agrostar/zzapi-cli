@@ -265,16 +265,19 @@ requests:
       status: { $ne: 200 }
       $h.content-type: { $exists: false }
       # regular things that should fail
-      $.data.name: { $type: array }
-      $.data.missing: { $size: 0, $exists: true } # should report 2 failures
-      $.data.missing.missing.missing: { $exists: true }
-      $.data.numbers.0: "444" # 444 is not same as "444". We use === for $eq and !== for $neq
-
-      # stress: ensure corner cases don't crash
-      $.data.age: { $size: 2 } # .length not supported for type: number
-      $.data.numbers[?(.@)]: 4 # invalid path
-      $.data.age.something: 55 # jsonpath should take care of this.
-      $.data.numbers[5]: 0 # jsonpath should take care of this
+      $.data:
+        $tests:
+          $.name: {$type: array}
+          $.missing: 
+            $size: 0
+            $exists: true 
+            $tests: 
+              $.missing.missing: { $exists: true }
+          $.numbers.0: "444" # 444 is not same as "444". We use === for $eq and !== for $neq
+          $.age: { $size: 2 } # .length not supported for type: number
+          $.numbers[?(.@)]: 4 # invalid path
+          $.age.something: 55 # jsonpath should take care of this.
+          $.numbers[5]: 0 # jsonpath should take care of this
 
   # This request tests should all fail due to bad tests schema
   # Ensure we don't crash on these.
