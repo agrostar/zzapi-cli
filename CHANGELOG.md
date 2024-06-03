@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.0.0]
+- Using v1.4.0 of zzapi, which adds `$tests` key to the assertion operators to run tests recursively on a sub-object
+- Output formatting changed: Indents the results for assertions under `$tests`
+
 ## [1.1.1]
 - Using v1.2.1 of zzapi, which fixes the stopOnFailure bug
 
