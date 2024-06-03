@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.1.0]
+- Support multiple bundles for execution
+
 ## [2.0.0]
 - Using v1.4.0 of zzapi, which adds `$tests` key to the assertion operators to run tests recursively on a sub-object
 - Output formatting changed: Indents the results for assertions under `$tests`

@@ -13,7 +13,7 @@ npm i -g zzapi-cli
 ### Usage
 
 ```bash
-zzapi-cli [options] <path-to-bundle>
+zzapi-cli [options] <path-to-bundle> [...<path-to-bundle>]
 ```
 The CLI takes one argument, the path to the zzAPI bundle. 
 
