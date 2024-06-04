@@ -59,7 +59,7 @@ function getStatusString(
   name: string,
   status: number | undefined,
   size: number,
-  execTime: string | number
+  execTime: string | number,
 ): string {
   let message: string =
     C_TIME(`${new Date().toLocaleString()}`) +
@@ -80,7 +80,7 @@ function getFlatResult(
   name: string,
   status: number | undefined,
   size: number,
-  execTime: string | number
+  execTime: string | number,
 ): [string, number, number] {
   const [passed, all] = getPassData(specRes);
   if (passed === all)
@@ -113,7 +113,7 @@ function getIndentedResult(
   name: string,
   status: number | undefined,
   size: number,
-  execTime: string | number
+  execTime: string | number,
 ): [string, number, number] {
   const [passed, all] = getPassData(specRes);
   if (passed === all)
@@ -150,7 +150,7 @@ function getRequestResult(
   status: number | undefined,
   size: number,
   execTime: string | number,
-  indent: boolean
+  indent: boolean,
 ): [string, number, number] {
   return indent
     ? getIndentedResult(specRes, method, name, status, size, execTime)
@@ -162,7 +162,7 @@ export async function allRequestsWithProgress(
     [name: string]: RequestSpec;
   },
   bundlePath: string,
-  indent: boolean
+  indent: boolean,
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
@@ -245,7 +245,7 @@ export async function allRequestsWithProgress(
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
         );
       process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
