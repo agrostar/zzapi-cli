@@ -20,14 +20,16 @@ import {
 import { getStatusCode } from "./utils/errors";
 import { replaceFileContents } from "./fileContents";
 
-function formatTestResults(results: TestResult[]): string[] {
+function formatTestResults(results: TestResult[], spec?: string): string[] {
   const resultLines: string[] = [];
   for (const r of results) {
     let line: string;
     if (r.pass) {
-      line = C_SUC(`[INFO]`) + C_SUC_TEXT(` test expected ${r.op}: ${r.expected} OK`);
+      line = C_SUC(`[INFO]`) + C_SUC_TEXT(` test ${spec ?? ":"}: expected ${r.op}: ${r.expected} OK`);
     } else {
-      line = C_ERR(`[FAIL]`) + C_ERR_TEXT(` test expected ${r.op}: ${r.expected} | got ${r.received}`);
+      line =
+        C_ERR(`[FAIL]`) +
+        C_ERR_TEXT(` test ${spec ?? ":"}: expected ${r.op}: ${r.expected} | got ${r.received}`);
     }
     if (r.message) line += C_ERR_INFO(`[${r.message}]`);
 
@@ -36,29 +38,43 @@ function formatTestResults(results: TestResult[]): string[] {
   return resultLines;
 }
 
-function getFormattedResult(
+function getPassData(res: SpecResult): [number, number] {
+  const rootResults = res.results;
+  let passed = rootResults.filter((r) => r.pass).length,
+    all = rootResults.length;
+
+  for (const s of res.subResults) {
+    const [subPassed, subAll] = getPassData(s);
+    passed += subPassed;
+    all += subAll;
+  }
+
+  return [passed, all];
+}
+
+function getFlatResult(
   specRes: SpecResult,
   method: string,
   name: string,
   status: number | undefined,
   size: number,
-  execTime: string | number,
+  execTime: string | number
 ): [string, number, number] {
-  function getResultData(res: SpecResult): [number, number] {
-    const rootResults = res.results;
-    let passed = rootResults.filter((r) => r.pass).length,
-      all = rootResults.length;
+  const [passed, all] = getPassData(specRes);
 
-    for (const s of res.subResults) {
-      const [subPassed, subAll] = getResultData(s);
-      passed += subPassed;
-      all += subAll;
-    }
 
-    return [passed, all];
-  }
+  return ["", passed, all];
+};
 
-  const [passed, all] = getResultData(specRes);
+function getIndentedResult(
+  specRes: SpecResult,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  execTime: string | number
+): [string, number, number] {
+  const [passed, all] = getPassData(specRes);
 
   let message: string =
     C_TIME(`${new Date().toLocaleString()}`) +
@@ -101,7 +117,7 @@ export async function allRequestsWithProgress(
   allRequests: {
     [name: string]: RequestSpec;
   },
-  bundlePath: string,
+  bundlePath: string
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
@@ -184,7 +200,7 @@ export async function allRequestsWithProgress(
         C_TIME(`${new Date().toLocaleString()}`) +
         C_ERR(` [ERROR] `) +
         C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
+          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`
         );
       process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
@@ -192,7 +208,7 @@ export async function allRequestsWithProgress(
     }
 
     const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
-    let [message, passed, all] = getFormattedResult(results, method, name, status, size, et);
+    let [message, passed, all] = getIndentedResult(results, method, name, status, size, et);
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
     const captureOutput = captureVariables(requestData, response);
