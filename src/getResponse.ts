@@ -61,10 +61,6 @@ function getStatusString(
   size: number,
   execTime: string | number,
 ): string {
-  let message: string =
-    C_TIME(`${new Date().toLocaleString()}`) +
-    (all === passed ? C_SUC(` [INFO]  `) : C_ERR(` [ERROR] `));
-
   const passRatio = all === 0 ? "" : `tests: ${passed}/${all} passed`;
   const summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${execTime} ${passRatio}`;
 
