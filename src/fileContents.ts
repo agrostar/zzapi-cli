@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { getRawRequest } from "./utils/requestUtils";
-
 export function replaceFileContents<T>(body: T, bundlePath: string): T {
   if (typeof body !== "string") return body;
 

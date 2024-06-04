@@ -1,7 +1,5 @@
 import { ResponseData } from "zzapi";
 
-import { getRawRequest } from "./utils/requestUtils";
-
 const KEYS_IN_BODY = ["body"];
 const KEYS_IN_HEADERS = ["rawHeaders"];
 
