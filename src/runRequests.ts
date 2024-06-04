@@ -26,7 +26,7 @@ async function runRequestSpecs(
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
   }
 
-  const responses = await allRequestsWithProgress(requests, rawRequest.bundle.bundlePath);
+  const responses = await allRequestsWithProgress(requests, rawRequest.bundle.bundlePath, rawRequest.indent);
   if (responses.length < 1) return;
 
   // if requestName is not set, then it is meant to be a run-all requests, else run-one
