@@ -22,6 +22,7 @@ program
   .option("-r, --req <req-name>", "Run a request of a particular name")
   .option("-e, --env <env-name>", "Run the request in a particular environment")
   .option("--expand", "Show the body output in the terminal")
+  .option("--indent", "indent the failing tests for clarity in specs")
   .parse(process.argv);
 
 async function main() {
