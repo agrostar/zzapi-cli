@@ -19,3 +19,7 @@ export const C_SUC_TEXT = chalkStderr.green;
 // warning
 export const C_WARN = chalkStderr.yellow.bold;
 export const C_WARN_TEXT = chalkStderr.yellow;
+
+// skip
+export const C_SKIP = chalkStderr.gray;
+export const C_SKIP_TEXT = chalkStderr.gray.bold;
