@@ -1,5 +1,8 @@
 # Change Log
 
+## [2.2.0]
+- Using v1.5.0 of zzAPI, which adds `$skip` for tests.
+
 ## [2.1.0]
 - Support multiple bundles for execution
 

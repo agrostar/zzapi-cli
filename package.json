@@ -1,6 +1,6 @@
 {
   "name": "zzapi-cli",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "CLI for zzAPI - an API testing framework",
   "main": "dist/index.js",
   "bin": {
