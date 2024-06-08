@@ -2,12 +2,11 @@
 
 import { Command } from "commander";
 
-import { getRawRequest } from "./utils/requestUtils";
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
-import { getStatusCode } from "./utils/errors";
 import { C_ERR_TEXT, C_PATH, C_WARN_TEXT } from "./utils/colours";
 
 import { callRequests } from "./runRequests";
+import { RawRequest } from "./utils/requestUtils";
 
 const program = new Command(CLI_NAME);
 program
@@ -22,17 +21,19 @@ program
   .option("-r, --req <req-name>", "Run a request of a particular name")
   .option("-e, --env <env-name>", "Run the request in a particular environment")
   .option("--expand", "Show the body output in the terminal")
+  .option("--indent", "indent the failing tests for clarity in specs")
   .parse(process.argv);
 
 async function main() {
   const options = program.opts();
   options.expand = options.expand === true;
+  options.indent = options.indent === true;
 
   const bundlePaths = program.args;
   for (const bundlePath of bundlePaths) {
     process.stderr.write(C_PATH(`\nRunning bundle: ${bundlePath}\n`));
     try {
-      const rawReq = getRawRequest(bundlePath, options.expand, options.req, options.env);
+      const rawReq = new RawRequest(bundlePath, options);
       await callRequests(rawReq);
     } catch (e: any) {
       if (typeof e === "string") {

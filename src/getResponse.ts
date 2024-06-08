@@ -16,27 +16,68 @@ import {
   C_WARN,
   C_WARN_TEXT,
   C_SPEC,
+  C_SKIP,
+  C_SKIP_TEXT,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
 import { replaceFileContents } from "./fileContents";
 
-function formatTestResults(results: TestResult[]): string[] {
+function formatTestResults(results: TestResult[], spec?: string, skip?: boolean): string[] {
   const resultLines: string[] = [];
   for (const r of results) {
+    const testContent = `test ${spec ?? ":"}: expected ${r.op}: ${r.expected}`;
     let line: string;
-    if (r.pass) {
-      line = C_SUC(`[INFO]`) + C_SUC_TEXT(` test expected ${r.op}: ${r.expected} OK`);
+    if (skip) {
+      line = C_SKIP(`[SKIP] `) + C_SKIP_TEXT(testContent);
     } else {
-      line = C_ERR(`[FAIL]`) + C_ERR_TEXT(` test expected ${r.op}: ${r.expected} | got ${r.received}`);
+      if (r.pass) {
+        line = C_SUC(`[INFO] `) + C_SUC_TEXT(`${testContent} OK`);
+      } else {
+        line = C_ERR(`[FAIL] `) + C_ERR_TEXT(`${testContent} | got ${r.received}`);
+      }
+      if (r.message) line += C_ERR_INFO(`[${r.message}]`);
     }
-    if (r.message) line += C_ERR_INFO(`[${r.message}]`);
 
     resultLines.push(line);
   }
   return resultLines;
 }
 
-function getFormattedResult(
+function getPassData(res: SpecResult): [number, number, boolean] {
+  const rootResults = res.results;
+  let passed = rootResults.filter((r) => r.pass).length,
+    all = rootResults.length;
+
+  let hasSkip: boolean = res.skipped ?? false;
+  for (const s of res.subResults) {
+    const [subPassed, subAll, subSkip] = getPassData(s);
+    passed += subPassed;
+    all += subAll;
+    hasSkip = hasSkip || subSkip;
+  }
+
+  return [passed, all, hasSkip];
+}
+
+function getStatusString(
+  passed: number,
+  all: number,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  execTime: string | number,
+): string {
+  const passRatio = all === 0 ? "" : `tests: ${passed}/${all} passed`;
+  const summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${execTime} ${passRatio}`;
+
+  const time = C_TIME(`${new Date().toLocaleString()}`);
+  return (
+    time + (all === passed ? C_SUC(` [INFO]  ${summaryString}`) : C_ERR(` [ERROR] ${summaryString}`))
+  );
+}
+
+function getFlatResult(
   specRes: SpecResult,
   method: string,
   name: string,
@@ -44,31 +85,44 @@ function getFormattedResult(
   size: number,
   execTime: string | number,
 ): [string, number, number] {
-  function getResultData(res: SpecResult): [number, number] {
-    const rootResults = res.results;
-    let passed = rootResults.filter((r) => r.pass).length,
-      all = rootResults.length;
+  const [passed, all, hasSkip] = getPassData(specRes);
+  if (passed === all && !hasSkip)
+    return [getStatusString(passed, all, method, name, status, size, execTime), passed, all];
 
+  function getResult(res: SpecResult, preSpec?: string): string {
+    const getFullSpec = (): string => {
+      if (!res.spec) return "";
+      return (preSpec ? preSpec + " / " : "") + res.spec;
+    };
+
+    const spec = getFullSpec();
+    const resultLines = formatTestResults(res.results, spec, res.skipped).map((r) => "\t" + r);
+    const subResultLines = [];
     for (const s of res.subResults) {
-      const [subPassed, subAll] = getResultData(s);
-      passed += subPassed;
-      all += subAll;
+      const subRes = getResult(s, spec);
+      if (subRes) subResultLines.push(subRes);
     }
 
-    return [passed, all];
+    return [...resultLines, ...subResultLines].join("\n");
   }
 
-  const [passed, all] = getResultData(specRes);
+  const statusString = getStatusString(passed, all, method, name, status, size, execTime);
+  return [statusString + "\n" + getResult(specRes), passed, all];
+}
 
-  let message: string =
-    C_TIME(`${new Date().toLocaleString()}`) +
-    (all === passed ? C_SUC(` [INFO]  `) : C_ERR(` [ERROR] `));
+function getIndentedResult(
+  specRes: SpecResult,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  execTime: string | number,
+): [string, number, number] {
+  const [passed, all, hasSkip] = getPassData(specRes);
+  if (passed === all && !hasSkip)
+    return [getStatusString(passed, all, method, name, status, size, execTime), passed, all];
 
-  const passRatio = all === 0 ? "" : `tests: ${passed}/${all} passed`;
-  const testString = passed === all ? C_SUC_TEXT(passRatio) : C_ERR_TEXT(passRatio);
-  const summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${execTime} ${testString}`;
-
-  function getIndentedResult(res: SpecResult, indent: number = 1): string {
+  function getResult(res: SpecResult, indent: number = 1): string {
     if (passed === all) return "";
 
     const specName = C_SPEC(res.spec ? "\t".repeat(indent - 1) + res.spec : "");
@@ -77,7 +131,7 @@ function getFormattedResult(
       .join("\n");
 
     const subRes: string[] = [];
-    for (const s of res.subResults) subRes.push(getIndentedResult(s, indent + 1));
+    for (const s of res.subResults) subRes.push(getResult(s, indent + 1));
     const subResString = subRes.join("\n");
 
     const dataElems: string[] = [];
@@ -88,13 +142,22 @@ function getFormattedResult(
     return dataElems.join("\n");
   }
 
-  if (passed === all) {
-    message += C_SUC_TEXT(summaryString);
-  } else {
-    message += [C_ERR_TEXT(summaryString), getIndentedResult(specRes)].join("\n");
-  }
+  const statusString = getStatusString(passed, all, method, name, status, size, execTime);
+  return [statusString + "\n" + getResult(specRes), passed, all];
+}
 
-  return [message + "\n", passed, all];
+function getRequestResult(
+  specRes: SpecResult,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  execTime: string | number,
+  indent: boolean,
+): [string, number, number] {
+  return indent
+    ? getIndentedResult(specRes, method, name, status, size, execTime)
+    : getFlatResult(specRes, method, name, status, size, execTime);
 }
 
 export async function allRequestsWithProgress(
@@ -102,6 +165,7 @@ export async function allRequestsWithProgress(
     [name: string]: RequestSpec;
   },
   bundlePath: string,
+  indent: boolean,
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   let responses: Array<{ name: string; response: ResponseData }> = [];
@@ -192,7 +256,8 @@ export async function allRequestsWithProgress(
     }
 
     const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
-    let [message, passed, all] = getFormattedResult(results, method, name, status, size, et);
+    let [message, passed, all] = getRequestResult(results, method, name, status, size, et, indent);
+    // console.log(message);
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
     const captureOutput = captureVariables(requestData, response);
@@ -200,16 +265,16 @@ export async function allRequestsWithProgress(
     const capturedErrors = captureOutput.captureErrors;
     getVarStore().mergeCapturedVariables(capturedVariables);
     if (capturedErrors) {
-      message += C_ERR(`${capturedErrors}`) + "\n";
+      message += C_ERR(`${capturedErrors}`);
     }
     if (undefs.length > 0) {
       message +=
         `\t` +
         C_WARN(`[WARN]`) +
-        C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?\n`);
+        C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
     }
 
-    process.stderr.write(`${message}`);
+    process.stderr.write(`${message}\n`);
   }
   return responses;
 }
