@@ -41,7 +41,7 @@ async function main() {
       } else {
         process.stderr.write(C_ERR_TEXT(`${e.message ?? "unable to process requests"}\n`));
       }
-      process.exitCode = (process.exitCode ?? 0) + 1;
+      process.exitCode = Number(process.exitCode ?? 0) + 1;
       continue;
     }
   }
