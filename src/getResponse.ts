@@ -6,36 +6,128 @@ import { replaceVariablesInRequest } from "zzapi";
 
 import { getVarStore } from "./variables";
 import {
-  C_ERR,
-  C_ERR_INFO,
+  C_ERR,  
   C_ERR_TEXT,
   C_LOADING,
+  C_STATUS,
   C_SUC,
   C_SUC_TEXT,
+  C_TEXT_BOLD,
+  C_TEXT,
   C_TIME,
   C_WARN,
   C_WARN_TEXT,
-  C_SPEC,
+  C_WARN_TOKENS,
+  C_OP,
   C_SKIP,
-  C_SKIP_TEXT,
+  C_SPEC,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
 import { replaceFileContents } from "./fileContents";
+import path from "path";
 
-function formatTestResults(results: TestResult[], spec?: string, skip?: boolean): string[] {
+const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
+
+function formatRoute(bundleName: string, method: string, name: string, status: number | undefined, et: string | number, size: number, passedCount: number, allCount: number) {
+  let line = C_TIME(`${new Date().toLocaleString()}`);
+  if (allCount === passedCount) {
+    // Success!
+    line += C_SUC(" ✓ ")
+      + C_TEXT_BOLD(bundleName)
+      + C_TEXT(" > ")
+      + C_TEXT_BOLD(`${method} ${name}`)
+      + C_STATUS(` ${status} `)
+      + C_TEXT(`[${et}, ${size} bytes]`)
+      + C_SUC_TEXT(` ${passedCount}/${allCount} passed`);
+  } else {
+    // Error!
+    line += C_ERR(" ✗ ")
+      + C_TEXT_BOLD(bundleName)
+      + C_TEXT(" > ")
+      + C_ERR(`${method} ${name}`)
+      + C_STATUS(` ${status} `)
+      + C_TEXT(`[${et}, ${size} bytes]`)
+      + C_ERR(` ${allCount - passedCount}/${allCount} tests failed`);
+  }
+  return line;
+}
+
+function formatRouteError(bundleName: string, method: string, name: string, error: string) {
+  const line = C_TIME(`${new Date().toLocaleString()}`)
+    + C_ERR(" ✗ ")
+    + C_TEXT_BOLD(bundleName)
+    + C_TEXT(" > ")
+    + C_ERR(`${method} ${name} `)
+    + C_ERR_TEXT(`error executing request\n${requestDetailInset}${error}`);
+  return line;
+}
+
+function formatRouteParseError(bundleName: string, method: string, name: string, status: number | undefined, size: number, et: string | number, parseError: string) {
+  const line = C_TIME(`${new Date().toLocaleString()}`)
+    + C_ERR(" ✗ ")
+    + C_TEXT_BOLD(bundleName)
+    + C_TEXT(" > ")
+    + C_ERR(`${method} ${name}`)
+    + C_STATUS(` ${status} `)
+    + C_TEXT(`[${et}, ${size} bytes] `)
+    + C_ERR_TEXT(`parse error(${parseError})`);
+  return line;
+}
+
+function formatUndefinedVariablesWarning(undefinedVariables: string[]) {
+  const line = requestDetailInset
+    + C_WARN("! ")
+    + C_WARN_TEXT("Undefined variable(s): ")
+    + C_WARN_TOKENS(undefinedVariables.join(","))
+    + C_WARN_TEXT(". Did you choose an env?");
+  return line;
+}
+
+function formatTestResults(inset: string, spec: string | null, results: TestResult[], lastResult: TestResult | undefined, skip: boolean, indented: boolean): string[] {
   const resultLines: string[] = [];
-  for (const r of results) {
-    const testContent = `test ${spec ?? ":"}: expected ${r.op}: ${r.expected}`;
-    let line: string;
+  for (const [i, r] of results.entries()) {
+    const pipe = lastResult
+      ? (r === lastResult ? "└" : "├") // flat view
+      : (i === (results.length - 1) ? "└" : "├"); // indented/nested view
+
+    // Indented presentation displays spec on a dedicated line, otherwise specs are displayed inline.
+    const specToken = spec && !indented ? `${spec} ` : "";
+
+    let line = `${inset}${pipe}`;
     if (skip) {
-      line = C_SKIP(`[SKIP] `) + C_SKIP_TEXT(testContent);
+      // Skipped Test!
+      line += C_SKIP(" ✓ ")
+        + C_TEXT("test ")
+        + C_TEXT(specToken)
+        + (r.op === ':' ? C_TEXT("$eq") : C_TEXT(r.op))
+        + C_TEXT(` ${r.expected}`)
+        + C_SKIP(" skipped");
+  } else if (r.pass) {
+      // Successful Test!
+      line += C_SUC(" ✓ ")
+        + C_TEXT("test ")
+        + C_SPEC(specToken)
+        + (r.op === ':' ? C_OP("$eq") : C_OP(r.op))
+        + C_TEXT(" expected ")
+        + C_SUC_TEXT(r.expected);
+
+        if (r.message) {
+          line = `${line}\n${inset}  ${C_TEXT(r.message)}`;
+        }    
     } else {
-      if (r.pass) {
-        line = C_SUC(`[INFO] `) + C_SUC_TEXT(`${testContent} OK`);
-      } else {
-        line = C_ERR(`[FAIL] `) + C_ERR_TEXT(`${testContent} | got ${r.received}`);
-      }
-      if (r.message) line += C_ERR_INFO(`[${r.message}]`);
+      // Failed Test!
+      line += C_ERR(" ✗ ")
+        + C_TEXT("test ")
+        + C_ERR_TEXT(specToken)
+        + (r.op === ':' ? C_OP("$eq") : C_OP(r.op))
+        + C_TEXT(" expected ")
+        + C_SUC_TEXT(r.expected)
+        + C_TEXT(" | actual ")
+        + C_ERR_TEXT(r.received);
+
+        if (r.message) {
+          line = `${line}\n${inset}  ${C_ERR_TEXT(r.message)}`;
+        }    
     }
 
     resultLines.push(line);
@@ -43,121 +135,76 @@ function formatTestResults(results: TestResult[], spec?: string, skip?: boolean)
   return resultLines;
 }
 
-function getPassData(res: SpecResult): [number, number, boolean] {
-  const rootResults = res.results;
-  let passed = rootResults.filter((r) => r.pass).length,
-    all = rootResults.length;
-
-  let hasSkip: boolean = res.skipped ?? false;
-  for (const s of res.subResults) {
-    const [subPassed, subAll, subSkip] = getPassData(s);
-    passed += subPassed;
-    all += subAll;
-    hasSkip = hasSkip || subSkip;
-  }
-
-  return [passed, all, hasSkip];
-}
-
-function getStatusString(
-  passed: number,
-  all: number,
-  method: string,
-  name: string,
-  status: number | undefined,
-  size: number,
-  execTime: string | number,
-): string {
-  const passRatio = all === 0 ? "" : `tests: ${passed}/${all} passed`;
-  const summaryString = `${method} ${name} status: ${status} size: ${size} B time: ${execTime} ${passRatio}`;
-
-  const time = C_TIME(`${new Date().toLocaleString()}`);
-  return (
-    time + (all === passed ? C_SUC(` [INFO]  ${summaryString}`) : C_ERR(` [ERROR] ${summaryString}`))
-  );
-}
-
-function getFlatResult(
+function getFormattedResult(
+  bundleName: string,
   specRes: SpecResult,
   method: string,
   name: string,
   status: number | undefined,
   size: number,
   execTime: string | number,
+  indented: boolean
 ): [string, number, number] {
-  const [passed, all, hasSkip] = getPassData(specRes);
-  if (passed === all && !hasSkip)
-    return [getStatusString(passed, all, method, name, status, size, execTime), passed, all];
+  function getResultData(res: SpecResult): [number, number] {
+    const rootResults = res.results;
+    let passed = rootResults.filter((r) => r.pass).length;
+    let all = rootResults.length;
 
-  function getResult(res: SpecResult, preSpec?: string): string {
-    const getFullSpec = (): string => {
-      if (!res.spec) return "";
-      return (preSpec ? preSpec + " / " : "") + res.spec;
-    };
-
-    const spec = getFullSpec();
-    const resultLines = formatTestResults(res.results, spec, res.skipped).map((r) => "\t" + r);
-    const subResultLines = [];
     for (const s of res.subResults) {
-      const subRes = getResult(s, spec);
-      if (subRes) subResultLines.push(subRes);
+      const [subPassed, subAll] = getResultData(s);
+      passed += subPassed;
+      all += subAll;
     }
 
-    return [...resultLines, ...subResultLines].join("\n");
+    return [passed, all];
   }
 
-  const statusString = getStatusString(passed, all, method, name, status, size, execTime);
-  return [statusString + "\n" + getResult(specRes), passed, all];
-}
+  const [passed, all] = getResultData(specRes);
 
-function getIndentedResult(
-  specRes: SpecResult,
-  method: string,
-  name: string,
-  status: number | undefined,
-  size: number,
-  execTime: string | number,
-): [string, number, number] {
-  const [passed, all, hasSkip] = getPassData(specRes);
-  if (passed === all && !hasSkip)
-    return [getStatusString(passed, all, method, name, status, size, execTime), passed, all];
+  let message = formatRoute(bundleName, method, name, status, execTime, size, passed, all);
 
-  function getResult(res: SpecResult, indent: number = 1): string {
-    if (passed === all) return "";
-
-    const specName = C_SPEC(res.spec ? "\t".repeat(indent - 1) + res.spec : "");
-    const testResults = formatTestResults(res.results)
-      .map((r) => "\t".repeat(indent) + r)
-      .join("\n");
+  function getIndentedResult(res: SpecResult, indent: number, lastResult: TestResult | undefined): string {
+    const offset = "  ";
+    const inset = requestDetailInset + (indented ? offset.repeat((Math.max(1, indent-1))) : "");
+    
+    const testResults = formatTestResults(inset, res.spec, res.results, lastResult, res.skipped ?? false, indented).join("\n");
 
     const subRes: string[] = [];
-    for (const s of res.subResults) subRes.push(getResult(s, indent + 1));
+    for (const s of res.subResults) {
+      if (res.spec && !indented) s.spec = `${res.spec} > ${s.spec}`;
+      subRes.push(getIndentedResult(s, indent + 1, lastResult));
+    }
     const subResString = subRes.join("\n");
 
     const dataElems: string[] = [];
-    if (specName.length > 0) dataElems.push(specName);
+    if (res.spec && indented) dataElems.push(`${requestDetailInset}${offset.repeat(Math.max(0, indent-2))}${res.spec}`);
     if (testResults.length > 0) dataElems.push(testResults);
     if (subResString.length > 0) dataElems.push(subResString);
 
     return dataElems.join("\n");
   }
 
-  const statusString = getStatusString(passed, all, method, name, status, size, execTime);
-  return [statusString + "\n" + getResult(specRes), passed, all];
-}
+  if (passed !== all) {
+      // Find the last SpecResult and identify the last TestResult for flat/non-indented views
+      let lastTestResult: TestResult | undefined;
+    if (!indented) {
+      let lastSpec = specRes;
+      if (specRes.subResults) {
+        while (lastSpec.subResults) {
+          const spec = lastSpec.subResults[lastSpec.subResults.length-1];
+          if (spec) {
+            lastSpec = spec;
+          } else {
+            break;
+          }
+        }
+      }
+      lastTestResult = lastSpec.results[lastSpec.results.length-1];
+    }
+    message =`${message}\n${getIndentedResult(specRes, 1, lastTestResult)}`;
+  }
 
-function getRequestResult(
-  specRes: SpecResult,
-  method: string,
-  name: string,
-  status: number | undefined,
-  size: number,
-  execTime: string | number,
-  indent: boolean,
-): [string, number, number] {
-  return indent
-    ? getIndentedResult(specRes, method, name, status, size, execTime)
-    : getFlatResult(specRes, method, name, status, size, execTime);
+  return [message, passed, all];
 }
 
 export async function allRequestsWithProgress(
@@ -165,13 +212,15 @@ export async function allRequestsWithProgress(
     [name: string]: RequestSpec;
   },
   bundlePath: string,
-  indent: boolean,
+  indented: boolean
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
-  let responses: Array<{ name: string; response: ResponseData }> = [];
+  const responses: Array<{ name: string; response: ResponseData }> = [];
+
+  const bundleName = bundlePath.substring(bundlePath.lastIndexOf(path.sep) + 1);
 
   for (const name in allRequests) {
-    let requestData = allRequests[name];
+    const requestData = allRequests[name];
     const method = requestData.httpRequest.method;
 
     requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body, bundlePath);
@@ -181,23 +230,23 @@ export async function allRequestsWithProgress(
     const reqNameMessage = `Running ${name}`;
     process.stderr.write(C_LOADING(`${reqNameMessage}\r`));
     let dots = "";
-    let reqTimer = setInterval(() => {
+    const reqTimer = setInterval(() => {
       dots += ".";
       process.stderr.write(C_LOADING(`\r${reqNameMessage}${dots}`));
     }, 1000);
 
     const {
       response: httpResponse,
-      executionTime: executionTime,
+      executionTime,
       byteLength: size,
-      error: error,
+      error,
     } = await executeGotRequest(currHttpRequest);
 
     clearInterval(reqTimer);
-    process.stderr.write(`\r`);
+    process.stderr.write("\r");
 
     const response: ResponseData = {
-      executionTime: executionTime + " ms",
+      executionTime: `${executionTime} ms`,
       status: httpResponse.statusCode,
       body: httpResponse.body,
       rawHeaders: getHeadersAsString(httpResponse.rawHeaders),
@@ -206,15 +255,10 @@ export async function allRequestsWithProgress(
     };
 
     if (error) {
-      let message =
-        C_TIME(`${new Date().toLocaleString()} `) +
-        C_ERR(`[ERROR]`) +
-        C_ERR_TEXT(` ${method} ${name} Error executing request: ${error})`);
+      let message = formatRouteError(bundleName, method, name, error);
+
       if (undefs.length > 0) {
-        message +=
-          `\n\t` +
-          C_WARN(`[warn]`) +
-          C_WARN_TEXT(` Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
+        message = `${message}\n${formatUndefinedVariablesWarning(undefs)}`;
       }
       process.stderr.write(`${message}\n`);
       process.exitCode = getStatusCode() + 1;
@@ -235,7 +279,7 @@ export async function allRequestsWithProgress(
           if (err instanceof Error) {
             parseError = err.message;
           } else {
-            parseError = "Error parsing the response body: ${err}";
+            parseError = `Error parsing the response body: ${err}`;
           }
         }
       }
@@ -244,20 +288,14 @@ export async function allRequestsWithProgress(
     const status = response.status;
     const et = response.executionTime;
     if (parseError) {
-      const message =
-        C_TIME(`${new Date().toLocaleString()}`) +
-        C_ERR(` [ERROR] `) +
-        C_ERR_TEXT(
-          `${method} ${name} status: ${status} size: ${size} B time: ${et} parse error(${parseError})`,
-        );
-      process.stderr.write(`${message}\n`);
+      const message = formatRouteParseError(bundleName, method, name, status, size, et, parseError);
+      process.stderr.write(`\r${message}\n`);
       process.exitCode = getStatusCode() + 1;
       continue;
     }
 
     const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
-    let [message, passed, all] = getRequestResult(results, method, name, status, size, et, indent);
-    // console.log(message);
+    let [message, passed, all] = getFormattedResult(bundleName, results, method, name, status, size, et, indented);
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
     const captureOutput = captureVariables(requestData, response);
@@ -265,13 +303,10 @@ export async function allRequestsWithProgress(
     const capturedErrors = captureOutput.captureErrors;
     getVarStore().mergeCapturedVariables(capturedVariables);
     if (capturedErrors) {
-      message += C_ERR(`${capturedErrors}`);
+      message = `${message}${requestDetailInset}${C_ERR(`${capturedErrors}`)}`;
     }
     if (undefs.length > 0) {
-      message +=
-        `\t` +
-        C_WARN(`[WARN]`) +
-        C_WARN_TEXT(`  Undefined variable(s): ${undefs.join(",")}. Did you choose an env?`);
+      message = `${message}\n${formatUndefinedVariablesWarning(undefs)}`;
     }
 
     process.stderr.write(`${message}\n`);
@@ -282,11 +317,11 @@ export async function allRequestsWithProgress(
 function getStrictStringValue(value: any): string {
   if (value === undefined) {
     return "undefined";
-  } else if (typeof value === "object") {
-    return JSON.stringify(value);
-  } else {
-    return value.toString();
   }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return value.toString();  
 }
 
 function getHeadersAsString(rawHeaders: string[]): string {
