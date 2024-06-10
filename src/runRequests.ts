@@ -9,7 +9,11 @@ import { C_WARN } from "./utils/colours";
 import { CLI_VERSION } from "./utils/version";
 
 import { showContentForIndReq, showContentForAllReq } from "./showRes";
-import { allRequestsWithProgress } from "./getResponse";
+import {
+  allRequestsWithProgress,
+  formatUndefinedEnvWarning,
+  formatUndefinedVariablesWarning,
+} from "./getResponse";
 import { getVarFileContents, getVarStore } from "./variables";
 
 async function runRequestSpecs(
@@ -55,13 +59,19 @@ export async function callRequests(request: RawRequest): Promise<void> {
   try {
     // load the variables
     const env = request.envName;
-    const loadedVariables: Variables = loadVariables(
+    const { vars: loadedVariables, undefinedVars } = loadVariables(
       env,
       request.bundle.bundleContents,
       getVarFileContents(path.dirname(request.bundle.bundlePath)),
     );
-    if (env && Object.keys(loadedVariables).length < 1)
-      console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
+    if (undefinedVars.length > 0) {
+      const warning = formatUndefinedVariablesWarning(undefinedVars);
+      process.stderr.write(warning + "\n");
+    }
+    if (env && Object.keys(loadedVariables).length < 1) {
+      const warning = formatUndefinedEnvWarning(env);
+      process.stderr.write(warning + "\n");
+    }
     getVarStore().setLoadedVariables(loadedVariables);
   } catch (err: any) {
     throw err;
