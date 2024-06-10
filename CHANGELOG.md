@@ -1,5 +1,9 @@
 # Change Log
 
+## [3.0.0]
+- Alternate console presentation for better output
+- New major version since the default output formatting has changed
+
 ## [2.2.0]
 - Using v1.5.0 of zzAPI, which adds `$skip` for tests.
 
