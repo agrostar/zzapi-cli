@@ -5,7 +5,6 @@ import { getAllRequestSpecs, getRequestSpec } from "zzapi";
 import { loadVariables } from "zzapi";
 
 import { RawRequest } from "./utils/requestUtils";
-import { C_WARN } from "./utils/colours";
 import { CLI_VERSION } from "./utils/version";
 
 import { showContentForIndReq, showContentForAllReq } from "./showRes";
