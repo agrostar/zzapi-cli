@@ -6,7 +6,7 @@ import { replaceVariablesInRequest } from "zzapi";
 
 import { getVarStore } from "./variables";
 import {
-  C_ERR,  
+  C_ERR,
   C_ERR_TEXT,
   C_LOADING,
   C_STATUS,
@@ -28,67 +28,100 @@ import path from "path";
 
 const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
 
-function formatRoute(bundleName: string, method: string, name: string, status: number | undefined, et: string | number, size: number, passedCount: number, allCount: number) {
+function formatRoute(
+  bundleName: string,
+  method: string,
+  name: string,
+  status: number | undefined,
+  et: string | number,
+  size: number,
+  passedCount: number,
+  allCount: number,
+) {
   let line = C_TIME(`${new Date().toLocaleString()}`);
   if (allCount === passedCount) {
     // Success!
-    line += C_SUC(" ✓ ")
-      + C_TEXT_BOLD(bundleName)
-      + C_TEXT(" > ")
-      + C_TEXT_BOLD(`${method} ${name}`)
-      + C_STATUS(` ${status} `)
-      + C_TEXT(`[${et}, ${size} bytes]`)
-      + C_SUC_TEXT(` ${passedCount}/${allCount} passed`);
+    line +=
+      C_SUC(" ✓ ") +
+      C_TEXT_BOLD(bundleName) +
+      C_TEXT(" > ") +
+      C_TEXT_BOLD(`${method} ${name}`) +
+      C_STATUS(` ${status} `) +
+      C_TEXT(`[${et}, ${size} bytes]`) +
+      C_SUC_TEXT(` ${passedCount}/${allCount} passed`);
   } else {
     // Error!
-    line += C_ERR(" ✗ ")
-      + C_TEXT_BOLD(bundleName)
-      + C_TEXT(" > ")
-      + C_ERR(`${method} ${name}`)
-      + C_STATUS(` ${status} `)
-      + C_TEXT(`[${et}, ${size} bytes]`)
-      + C_ERR(` ${allCount - passedCount}/${allCount} tests failed`);
+    line +=
+      C_ERR(" ✗ ") +
+      C_TEXT_BOLD(bundleName) +
+      C_TEXT(" > ") +
+      C_ERR(`${method} ${name}`) +
+      C_STATUS(` ${status} `) +
+      C_TEXT(`[${et}, ${size} bytes]`) +
+      C_ERR(` ${allCount - passedCount}/${allCount} tests failed`);
   }
   return line;
 }
 
 function formatRouteError(bundleName: string, method: string, name: string, error: string) {
-  const line = C_TIME(`${new Date().toLocaleString()}`)
-    + C_ERR(" ✗ ")
-    + C_TEXT_BOLD(bundleName)
-    + C_TEXT(" > ")
-    + C_ERR(`${method} ${name} `)
-    + C_ERR_TEXT(`error executing request\n${requestDetailInset}${error}`);
+  const line =
+    C_TIME(`${new Date().toLocaleString()}`) +
+    C_ERR(" ✗ ") +
+    C_TEXT_BOLD(bundleName) +
+    C_TEXT(" > ") +
+    C_ERR(`${method} ${name} `) +
+    C_ERR_TEXT(`error executing request\n${requestDetailInset}${error}`);
   return line;
 }
 
-function formatRouteParseError(bundleName: string, method: string, name: string, status: number | undefined, size: number, et: string | number, parseError: string) {
-  const line = C_TIME(`${new Date().toLocaleString()}`)
-    + C_ERR(" ✗ ")
-    + C_TEXT_BOLD(bundleName)
-    + C_TEXT(" > ")
-    + C_ERR(`${method} ${name}`)
-    + C_STATUS(` ${status} `)
-    + C_TEXT(`[${et}, ${size} bytes] `)
-    + C_ERR_TEXT(`parse error(${parseError})`);
+function formatRouteParseError(
+  bundleName: string,
+  method: string,
+  name: string,
+  status: number | undefined,
+  size: number,
+  et: string | number,
+  parseError: string,
+) {
+  const line =
+    C_TIME(`${new Date().toLocaleString()}`) +
+    C_ERR(" ✗ ") +
+    C_TEXT_BOLD(bundleName) +
+    C_TEXT(" > ") +
+    C_ERR(`${method} ${name}`) +
+    C_STATUS(` ${status} `) +
+    C_TEXT(`[${et}, ${size} bytes] `) +
+    C_ERR_TEXT(`parse error(${parseError})`);
   return line;
 }
 
 function formatUndefinedVariablesWarning(undefinedVariables: string[]) {
-  const line = requestDetailInset
-    + C_WARN("! ")
-    + C_WARN_TEXT("Undefined variable(s): ")
-    + C_WARN_TOKENS(undefinedVariables.join(","))
-    + C_WARN_TEXT(". Did you choose an env?");
+  const line =
+    requestDetailInset +
+    C_WARN("! ") +
+    C_WARN_TEXT("Undefined variable(s): ") +
+    C_WARN_TOKENS(undefinedVariables.join(",")) +
+    C_WARN_TEXT(". Did you choose an env?");
   return line;
 }
 
-function formatTestResults(inset: string, spec: string | null, results: TestResult[], lastResult: TestResult | undefined, skip: boolean, indented: boolean): string[] {
+function formatTestResults(
+  inset: string,
+  spec: string | null,
+  results: TestResult[],
+  lastResult: TestResult | undefined,
+  skip: boolean,
+  indented: boolean,
+): string[] {
   const resultLines: string[] = [];
   for (const [i, r] of results.entries()) {
     const pipe = lastResult
-      ? (r === lastResult ? "└" : "├") // flat view
-      : (i === (results.length - 1) ? "└" : "├"); // indented/nested view
+      ? r === lastResult
+        ? "└"
+        : "├" // flat view
+      : i === results.length - 1
+        ? "└"
+        : "├"; // indented/nested view
 
     // Indented presentation displays spec on a dedicated line, otherwise specs are displayed inline.
     const specToken = spec && !indented ? `${spec} ` : "";
@@ -96,38 +129,41 @@ function formatTestResults(inset: string, spec: string | null, results: TestResu
     let line = `${inset}${pipe}`;
     if (skip) {
       // Skipped Test!
-      line += C_SKIP(" ✓ ")
-        + C_TEXT("test ")
-        + C_TEXT(specToken)
-        + (r.op === ':' ? C_TEXT("$eq") : C_TEXT(r.op))
-        + C_TEXT(` ${r.expected}`)
-        + C_SKIP(" skipped");
-  } else if (r.pass) {
+      line +=
+        C_SKIP(" ✓ ") +
+        C_TEXT("test ") +
+        C_TEXT(specToken) +
+        (r.op === ":" ? C_TEXT("$eq") : C_TEXT(r.op)) +
+        C_TEXT(` ${r.expected}`) +
+        C_SKIP(" skipped");
+    } else if (r.pass) {
       // Successful Test!
-      line += C_SUC(" ✓ ")
-        + C_TEXT("test ")
-        + C_SPEC(specToken)
-        + (r.op === ':' ? C_OP("$eq") : C_OP(r.op))
-        + C_TEXT(" expected ")
-        + C_SUC_TEXT(r.expected);
+      line +=
+        C_SUC(" ✓ ") +
+        C_TEXT("test ") +
+        C_SPEC(specToken) +
+        (r.op === ":" ? C_OP("$eq") : C_OP(r.op)) +
+        C_TEXT(" expected ") +
+        C_SUC_TEXT(r.expected);
 
-        if (r.message) {
-          line = `${line}\n${inset}  ${C_TEXT(r.message)}`;
-        }    
+      if (r.message) {
+        line = `${line}\n${inset}  ${C_TEXT(r.message)}`;
+      }
     } else {
       // Failed Test!
-      line += C_ERR(" ✗ ")
-        + C_TEXT("test ")
-        + C_ERR_TEXT(specToken)
-        + (r.op === ':' ? C_OP("$eq") : C_OP(r.op))
-        + C_TEXT(" expected ")
-        + C_SUC_TEXT(r.expected)
-        + C_TEXT(" | actual ")
-        + C_ERR_TEXT(r.received);
+      line +=
+        C_ERR(" ✗ ") +
+        C_TEXT("test ") +
+        C_ERR_TEXT(specToken) +
+        (r.op === ":" ? C_OP("$eq") : C_OP(r.op)) +
+        C_TEXT(" expected ") +
+        C_SUC_TEXT(r.expected) +
+        C_TEXT(" | actual ") +
+        C_ERR_TEXT(r.received);
 
-        if (r.message) {
-          line = `${line}\n${inset}  ${C_ERR_TEXT(r.message)}`;
-        }    
+      if (r.message) {
+        line = `${line}\n${inset}  ${C_ERR_TEXT(r.message)}`;
+      }
     }
 
     resultLines.push(line);
@@ -143,7 +179,7 @@ function getFormattedResult(
   status: number | undefined,
   size: number,
   execTime: string | number,
-  indented: boolean
+  indented: boolean,
 ): [string, number, number] {
   function getResultData(res: SpecResult): [number, number] {
     const rootResults = res.results;
@@ -163,11 +199,22 @@ function getFormattedResult(
 
   let message = formatRoute(bundleName, method, name, status, execTime, size, passed, all);
 
-  function getIndentedResult(res: SpecResult, indent: number, lastResult: TestResult | undefined): string {
+  function getIndentedResult(
+    res: SpecResult,
+    indent: number,
+    lastResult: TestResult | undefined,
+  ): string {
     const offset = "  ";
-    const inset = requestDetailInset + (indented ? offset.repeat((Math.max(1, indent-1))) : "");
-    
-    const testResults = formatTestResults(inset, res.spec, res.results, lastResult, res.skipped ?? false, indented).join("\n");
+    const inset = requestDetailInset + (indented ? offset.repeat(Math.max(1, indent - 1)) : "");
+
+    const testResults = formatTestResults(
+      inset,
+      res.spec,
+      res.results,
+      lastResult,
+      res.skipped ?? false,
+      indented,
+    ).join("\n");
 
     const subRes: string[] = [];
     for (const s of res.subResults) {
@@ -177,7 +224,8 @@ function getFormattedResult(
     const subResString = subRes.join("\n");
 
     const dataElems: string[] = [];
-    if (res.spec && indented) dataElems.push(`${requestDetailInset}${offset.repeat(Math.max(0, indent-2))}${res.spec}`);
+    if (res.spec && indented)
+      dataElems.push(`${requestDetailInset}${offset.repeat(Math.max(0, indent - 2))}${res.spec}`);
     if (testResults.length > 0) dataElems.push(testResults);
     if (subResString.length > 0) dataElems.push(subResString);
 
@@ -185,13 +233,13 @@ function getFormattedResult(
   }
 
   if (passed !== all) {
-      // Find the last SpecResult and identify the last TestResult for flat/non-indented views
-      let lastTestResult: TestResult | undefined;
+    // Find the last SpecResult and identify the last TestResult for flat/non-indented views
+    let lastTestResult: TestResult | undefined;
     if (!indented) {
       let lastSpec = specRes;
       if (specRes.subResults) {
         while (lastSpec.subResults) {
-          const spec = lastSpec.subResults[lastSpec.subResults.length-1];
+          const spec = lastSpec.subResults[lastSpec.subResults.length - 1];
           if (spec) {
             lastSpec = spec;
           } else {
@@ -199,9 +247,9 @@ function getFormattedResult(
           }
         }
       }
-      lastTestResult = lastSpec.results[lastSpec.results.length-1];
+      lastTestResult = lastSpec.results[lastSpec.results.length - 1];
     }
-    message =`${message}\n${getIndentedResult(specRes, 1, lastTestResult)}`;
+    message = `${message}\n${getIndentedResult(specRes, 1, lastTestResult)}`;
   }
 
   return [message, passed, all];
@@ -212,7 +260,7 @@ export async function allRequestsWithProgress(
     [name: string]: RequestSpec;
   },
   bundlePath: string,
-  indented: boolean
+  indented: boolean,
 ): Promise<Array<{ name: string; response: ResponseData }>> {
   let currHttpRequest: GotRequest;
   const responses: Array<{ name: string; response: ResponseData }> = [];
@@ -295,7 +343,16 @@ export async function allRequestsWithProgress(
     }
 
     const results = runAllTests(requestData.tests, response, requestData.options.stopOnFailure);
-    let [message, passed, all] = getFormattedResult(bundleName, results, method, name, status, size, et, indented);
+    let [message, passed, all] = getFormattedResult(
+      bundleName,
+      results,
+      method,
+      name,
+      status,
+      size,
+      et,
+      indented,
+    );
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
     const captureOutput = captureVariables(requestData, response);
@@ -321,7 +378,7 @@ function getStrictStringValue(value: any): string {
   if (typeof value === "object") {
     return JSON.stringify(value);
   }
-  return value.toString();  
+  return value.toString();
 }
 
 function getHeadersAsString(rawHeaders: string[]): string {
