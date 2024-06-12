@@ -23,10 +23,12 @@ import {
   C_OP,
   C_SKIP,
   C_SPEC,
+  C_BUNDLE,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
 
 import { replaceFileContents } from "./fileContents";
+import { SpecResponse } from "./specResponse";
 
 const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
 
@@ -45,7 +47,7 @@ function formatRoute(
     // Success!
     line +=
       C_SUC(" ✓ ") +
-      C_TEXT_BOLD(bundleName) +
+      C_BUNDLE(bundleName) +
       C_TEXT(" > ") +
       C_TEXT_BOLD(`${method} ${name}`) +
       C_STATUS(` ${status} `) +
@@ -55,7 +57,7 @@ function formatRoute(
     // Error!
     line +=
       C_ERR(" ✗ ") +
-      C_TEXT_BOLD(bundleName) +
+      C_BUNDLE(bundleName) +
       C_TEXT(" > ") +
       C_ERR(`${method} ${name}`) +
       C_STATUS(` ${status} `) +
@@ -69,7 +71,7 @@ function formatRouteError(bundleName: string, method: string, name: string, erro
   const line =
     C_TIME(`${new Date().toLocaleString()}`) +
     C_ERR(" ✗ ") +
-    C_TEXT_BOLD(bundleName) +
+    C_BUNDLE(bundleName) +
     C_TEXT(" > ") +
     C_ERR(`${method} ${name} `) +
     C_ERR_TEXT(`error executing request\n${requestDetailInset}${error}`);
@@ -88,7 +90,7 @@ function formatRouteParseError(
   const line =
     C_TIME(`${new Date().toLocaleString()}`) +
     C_ERR(" ✗ ") +
-    C_TEXT_BOLD(bundleName) +
+    C_BUNDLE(bundleName) +
     C_TEXT(" > ") +
     C_ERR(`${method} ${name}`) +
     C_STATUS(` ${status} `) +
@@ -280,9 +282,9 @@ export async function allRequestsWithProgress(
   },
   bundlePath: string,
   indented: boolean,
-): Promise<Array<{ name: string; response: ResponseData }>> {
+): Promise<Array<SpecResponse>> {
   let currHttpRequest: GotRequest;
-  const responses: Array<{ name: string; response: ResponseData }> = [];
+  const responses: Array<SpecResponse> = [];
 
   const bundleName = bundlePath.substring(bundlePath.lastIndexOf(path.sep) + 1);
 
@@ -333,7 +335,8 @@ export async function allRequestsWithProgress(
     }
 
     // If no error, we can assume response is there and can be shown
-    responses.push({ name: name, response: response });
+    const specResponse = { name, response, passedTests: 0, allTests: 0 };
+    responses.push(specResponse);
 
     const status = response.status;
     const et = response.executionTime;
@@ -358,6 +361,9 @@ export async function allRequestsWithProgress(
       indented,
     );
     if (passed !== all) process.exitCode = getStatusCode() + 1;
+
+    specResponse.passedTests = passed;
+    specResponse.allTests = all;
 
     const captureOutput = captureVariables(requestData, response);
     const capturedVariables = captureOutput.capturedVars;

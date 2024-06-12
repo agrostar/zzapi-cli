@@ -11,16 +11,17 @@ import { CLI_VERSION } from "./utils/version";
 import { showContentForIndReq, showContentForAllReq } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
 import { getVarFileContents, getVarStore } from "./variables";
+import { BundleResult } from "./bundleResult";
 
 async function runRequestSpecs(
   requests: { [name: string]: RequestSpec },
   rawRequest: RawRequest,
-): Promise<void> {
+): Promise<BundleResult> {
   for (const name in requests) {
     const request = requests[name];
 
     const autoHeaders: { [key: string]: string } = { "user-agent": "zzAPI-cli/" + CLI_VERSION };
-    if (request.httpRequest.body && typeof request.httpRequest.body == "object")
+    if (request.httpRequest.body && typeof request.httpRequest.body === "object")
       autoHeaders["content-type"] = "application/json";
 
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
@@ -31,7 +32,8 @@ async function runRequestSpecs(
     rawRequest.bundle.bundlePath,
     rawRequest.indent,
   );
-  if (responses.length < 1) return;
+
+  if (responses.length < 1) return new BundleResult(rawRequest.bundle.bundlePath);
 
   // if requestName is not set, then it is meant to be a run-all requests, else run-one
   if (!rawRequest.requestName) {
@@ -49,9 +51,13 @@ async function runRequestSpecs(
       rawRequest.expand,
     );
   }
+
+  const bundleResult = new BundleResult(rawRequest.bundle.bundlePath);
+  bundleResult.addResponses(responses);
+  return bundleResult;
 }
 
-export async function callRequests(request: RawRequest): Promise<void> {
+export async function callRequests(request: RawRequest): Promise<BundleResult> {
   try {
     // load the variables
     const env = request.envName;
@@ -78,6 +84,10 @@ export async function callRequests(request: RawRequest): Promise<void> {
     throw err;
   }
 
-  // finally, run the request specs
-  await runRequestSpecs(allRequests, request);
+  // finally, run the request specs 
+  const t0 = performance.now();
+  const bundleResult = await runRequestSpecs(allRequests, request);
+  const t1 = performance.now();
+  bundleResult.duration = t1 - t0;
+  return bundleResult;
 }

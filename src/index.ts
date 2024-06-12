@@ -8,6 +8,7 @@ import { RawRequest } from "./utils/requestUtils";
 import { getStatusCode } from "./utils/errors";
 
 import { callRequests } from "./runRequests";
+import { displaySummary } from "./bundleResult";
 
 const program = new Command(CLI_NAME);
 program
@@ -31,11 +32,14 @@ async function main() {
   options.indent = options.indent === true;
 
   const bundlePaths = program.args;
+  const bundleResults = [];
   for (const bundlePath of bundlePaths) {
     process.stderr.write(C_PATH(`\nRunning bundle: ${bundlePath}\n`));
     try {
       const rawReq = new RawRequest(bundlePath, options);
-      await callRequests(rawReq);
+      const bundleResult = await callRequests(rawReq);
+      bundleResult.bundlePath = bundlePath;
+      bundleResults.push(bundleResult);
     } catch (e: any) {
       if (typeof e === "string") {
         process.stderr.write(C_ERR_TEXT(`${e}\n`));
@@ -46,6 +50,8 @@ async function main() {
       continue;
     }
   }
+
+  displaySummary(bundleResults);
 }
 
 main();
