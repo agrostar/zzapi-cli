@@ -1,6 +1,6 @@
 {
   "name": "zzapi-cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "CLI for zzAPI - an API testing framework",
   "main": "dist/index.js",
   "bin": {
@@ -12,13 +12,26 @@
     "prepack": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agrostar/zzapi.git"
+  },
+  "keywords": [
+    "api",
+    "testing",
+    "REST",
+    "postman"
+  ],
   "author": "agrostar",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agrostar/zzapi-cli/issues"
+  },
+  "homepage": "https://github.com/agrostar/zzapi-cli#readme",
   "dependencies": {
     "chalk": "4.1.2",
     "commander": "^11.1.0",
-    "zzapi": "^1.5.0"
+    "zzapi": "^1.5.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

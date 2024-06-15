@@ -1,5 +1,8 @@
 # Change Log
 
+## [3.0.1]
+- Fix regression (status checks not reported)
+
 ## [3.0.0]
 - Alternate console presentation for better output
 - New major version since the default output formatting has changed
