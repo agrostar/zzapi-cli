@@ -10,7 +10,7 @@ import { CLI_VERSION } from "./utils/version";
 
 import { showContentForIndReq, showContentForAllReq } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
-import { getVarFileContents, getVarStore } from "./variables";
+import { getVarFileContents } from "./variables";
 
 async function runRequestSpecs(
   requests: { [name: string]: RequestSpec },
@@ -26,11 +26,7 @@ async function runRequestSpecs(
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
   }
 
-  const responses = await allRequestsWithProgress(
-    requests,
-    rawRequest.bundle.bundlePath,
-    rawRequest.indent,
-  );
+  const responses = await allRequestsWithProgress(requests, rawRequest);
   if (responses.length < 1) return;
 
   // if requestName is not set, then it is meant to be a run-all requests, else run-one
@@ -62,7 +58,7 @@ export async function callRequests(request: RawRequest): Promise<void> {
     );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
-    getVarStore().setLoadedVariables(loadedVariables);
+    request.variables.setLoadedVariables(loadedVariables);
   } catch (err: any) {
     throw err;
   }
