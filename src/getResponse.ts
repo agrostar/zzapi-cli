@@ -1,3 +1,5 @@
+import path from "path";
+
 import { ResponseData, RequestSpec, GotRequest, TestResult, SpecResult } from "zzapi";
 import { constructGotRequest, executeGotRequest } from "zzapi";
 import { runAllTests } from "zzapi";
@@ -22,9 +24,9 @@ import {
   C_SPEC,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
-import { replaceFileContents } from "./fileContents";
-import path from "path";
 import { RawRequest } from "./utils/requestUtils";
+
+import { replaceFileContents } from "./fileContents";
 
 const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
 

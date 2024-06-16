@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { getEnvironments } from "zzapi";
-import { VarStore } from "zzapi";
 
 const VARFILE_EXTENSION = ".zzv";
 

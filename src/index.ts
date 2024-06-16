@@ -4,9 +4,9 @@ import { Command } from "commander";
 
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { C_ERR_TEXT, C_PATH, C_WARN_TEXT } from "./utils/colours";
+import { RawRequest } from "./utils/requestUtils";
 
 import { callRequests } from "./runRequests";
-import { RawRequest } from "./utils/requestUtils";
 
 const program = new Command(CLI_NAME);
 program
