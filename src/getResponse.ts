@@ -255,6 +255,23 @@ function getFormattedResult(
   return [message, passed, all];
 }
 
+function attemptParse(response: ResponseData, expectJson?: boolean): string | undefined {
+  if (!expectJson || !response.status) return undefined;
+  if (!response.body) return "No response body";
+
+  try {
+    response.json = JSON.parse(response.body as string);
+  } catch (err) {
+    if (err instanceof Error && err.message) {
+      return err.message;
+    } else {
+      return `Error parsing the response body: ${err}`;
+    }
+  }
+
+  return undefined;
+}
+
 export async function allRequestsWithProgress(
   allRequests: {
     [name: string]: RequestSpec;
@@ -316,25 +333,10 @@ export async function allRequestsWithProgress(
     // If no error, we can assume response is there and can be shown
     responses.push({ name: name, response: response });
 
-    let parseError = "";
-    if (requestData.expectJson && response.status) {
-      if (!response.body) {
-        parseError = "No response body";
-      } else {
-        try {
-          response.json = JSON.parse(response.body as string);
-        } catch (err) {
-          if (err instanceof Error) {
-            parseError = err.message;
-          } else {
-            parseError = `Error parsing the response body: ${err}`;
-          }
-        }
-      }
-    }
-
     const status = response.status;
     const et = response.executionTime;
+
+    const parseError = attemptParse(response, requestData.expectJson);
     if (parseError) {
       const message = formatRouteParseError(bundleName, method, name, status, size, et, parseError);
       process.stderr.write(`\r${message}\n`);
