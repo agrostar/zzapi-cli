@@ -1,3 +1,5 @@
+import path from "path";
+
 import { ResponseData, RequestSpec, GotRequest, TestResult, SpecResult } from "zzapi";
 import { constructGotRequest, executeGotRequest } from "zzapi";
 import { runAllTests } from "zzapi";
@@ -23,8 +25,8 @@ import {
   C_SPEC,
 } from "./utils/colours";
 import { getStatusCode } from "./utils/errors";
+
 import { replaceFileContents } from "./fileContents";
-import path from "path";
 
 const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
 
@@ -260,7 +262,7 @@ function attemptParse(response: ResponseData, expectJson?: boolean): string | un
   if (!response.body) return "No response body";
 
   try {
-    response.json = JSON.parse(response.body as string);
+    response.json = JSON.parse(response.body);
   } catch (err) {
     if (err instanceof Error && err.message) {
       return err.message;

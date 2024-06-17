@@ -4,9 +4,10 @@ import { Command } from "commander";
 
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { C_ERR_TEXT, C_PATH, C_WARN_TEXT } from "./utils/colours";
+import { RawRequest } from "./utils/requestUtils";
+import { getStatusCode } from "./utils/errors";
 
 import { callRequests } from "./runRequests";
-import { RawRequest } from "./utils/requestUtils";
 
 const program = new Command(CLI_NAME);
 program
@@ -41,7 +42,7 @@ async function main() {
       } else {
         process.stderr.write(C_ERR_TEXT(`${e.message ?? "unable to process requests"}\n`));
       }
-      process.exitCode = Number(process.exitCode ?? 0) + 1;
+      process.exitCode = getStatusCode() + 1;
       continue;
     }
   }
