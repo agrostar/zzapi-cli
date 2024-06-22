@@ -5,6 +5,7 @@ export const C_PATH = chalkStderr.cyan; // path
 export const C_LOADING = chalkStderr.blue.italic; // loading
 export const C_TIME = chalkStderr.gray; // time
 
+export const C_BUNDLE = chalkStderr.white;
 export const C_SPEC = chalkStderr.white; // spec
 
 export const C_STATUS = chalkStderr.cyanBright;
