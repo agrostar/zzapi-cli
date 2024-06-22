@@ -1,5 +1,8 @@
 # Change Log
 
+## [todo]
+- Fix variable file sorting using explicit `sort()`
+
 ## [3.0.1]
 - Fix regression (status checks not reported)
 
