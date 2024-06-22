@@ -2,6 +2,7 @@
 
 ## [todo]
 - Fix variable file sorting using explicit `sort()`
+- Summarize bundle results in a table
 
 ## [3.0.1]
 - Fix regression (status checks not reported)
