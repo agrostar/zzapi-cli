@@ -30,8 +30,3 @@ export function getVarFileContents(dirPath: string): string[] {
 export function getEnvNames(dirPath: string, bundleContent: string): string[] {
   return getEnvironments(bundleContent, getVarFileContents(dirPath));
 }
-
-let variables = new VarStore();
-export function getVarStore(): VarStore {
-  return variables;
-}

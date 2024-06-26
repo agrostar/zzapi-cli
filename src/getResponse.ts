@@ -6,7 +6,6 @@ import { runAllTests } from "zzapi";
 import { captureVariables } from "zzapi";
 import { replaceVariablesInRequest } from "zzapi";
 
-import { getVarStore } from "./variables";
 import {
   C_ERR,
   C_ERR_TEXT,
@@ -29,6 +28,7 @@ import { getStatusCode } from "./utils/errors";
 
 import { replaceFileContents } from "./fileContents";
 import { SpecResponse } from "./specResponse";
+import { RawRequest } from "./utils/requestUtils";
 
 const requestDetailInset = " ".repeat(new Date().toLocaleString().length + 3);
 
@@ -280,12 +280,12 @@ export async function allRequestsWithProgress(
   allRequests: {
     [name: string]: RequestSpec;
   },
-  bundlePath: string,
-  indented: boolean,
+  rawReq: RawRequest,
 ): Promise<Array<SpecResponse>> {
   let currHttpRequest: GotRequest;
   const responses: Array<SpecResponse> = [];
 
+  const bundlePath = rawReq.bundle.bundlePath;
   const bundleName = bundlePath.substring(bundlePath.lastIndexOf(path.sep) + 1);
 
   for (const name in allRequests) {
@@ -293,7 +293,7 @@ export async function allRequestsWithProgress(
     const method = requestData.httpRequest.method;
 
     requestData.httpRequest.body = replaceFileContents(requestData.httpRequest.body, bundlePath);
-    const undefs = replaceVariablesInRequest(requestData, getVarStore().getAllVariables());
+    const undefs = replaceVariablesInRequest(requestData, rawReq.variables.getAllVariables());
     currHttpRequest = constructGotRequest(requestData);
 
     const reqNameMessage = `Running ${name}`;
@@ -358,7 +358,7 @@ export async function allRequestsWithProgress(
       status,
       size,
       et,
-      indented,
+      rawReq.indent,
     );
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
@@ -368,7 +368,7 @@ export async function allRequestsWithProgress(
     const captureOutput = captureVariables(requestData, response);
     const capturedVariables = captureOutput.capturedVars;
     const capturedErrors = captureOutput.captureErrors;
-    getVarStore().mergeCapturedVariables(capturedVariables);
+    rawReq.variables.mergeCapturedVariables(capturedVariables);
     if (capturedErrors) {
       message = `${message}${requestDetailInset}${C_ERR(`${capturedErrors}`)}`;
     }
