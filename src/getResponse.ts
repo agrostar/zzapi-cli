@@ -40,7 +40,7 @@ function formatRoute(
   et: string | number,
   size: number,
   passedCount: number,
-  allCount: number
+  allCount: number,
 ) {
   let line = C_TIME(`${new Date().toLocaleString()}`);
   if (allCount === passedCount) {
@@ -85,7 +85,7 @@ function formatRouteParseError(
   status: number | undefined,
   size: number,
   et: string | number,
-  parseError: string
+  parseError: string,
 ) {
   const line =
     C_TIME(`${new Date().toLocaleString()}`) +
@@ -115,7 +115,7 @@ function formatTestResults(
   results: TestResult[],
   lastResult: TestResult | undefined,
   skip: boolean,
-  indented: boolean
+  indented: boolean,
 ): string[] {
   const resultLines: string[] = [];
   for (const [i, r] of results.entries()) {
@@ -124,8 +124,8 @@ function formatTestResults(
         ? "└"
         : "├" // flat view
       : i === results.length - 1
-      ? "└"
-      : "├"; // indented/nested view
+        ? "└"
+        : "├"; // indented/nested view
 
     // Indented presentation displays spec on a dedicated line, otherwise specs are displayed inline.
     const specToken = spec && !indented ? `${spec} ` : "";
@@ -183,7 +183,7 @@ function getFormattedResult(
   status: number | undefined,
   size: number,
   execTime: string | number,
-  indented: boolean
+  indented: boolean,
 ): [string, number, number] {
   function getResultData(res: SpecResult): [number, number] {
     const rootResults = res.results;
@@ -206,7 +206,7 @@ function getFormattedResult(
   function getIndentedResult(
     res: SpecResult,
     indent: number,
-    lastResult: TestResult | undefined
+    lastResult: TestResult | undefined,
   ): string {
     const offset = "  ";
     const inset = requestDetailInset + (indented ? offset.repeat(Math.max(1, indent - 1)) : "");
@@ -217,7 +217,7 @@ function getFormattedResult(
       res.results,
       lastResult,
       res.skipped ?? false,
-      indented
+      indented,
     ).join("\n");
 
     const subRes: string[] = [];
@@ -280,7 +280,7 @@ export async function allRequestsWithProgress(
   allRequests: {
     [name: string]: RequestSpec;
   },
-  rawReq: RawRequest
+  rawReq: RawRequest,
 ): Promise<Array<SpecResponse>> {
   let currHttpRequest: GotRequest;
   const responses: Array<SpecResponse> = [];
@@ -358,7 +358,7 @@ export async function allRequestsWithProgress(
       status,
       size,
       et,
-      rawReq.indent
+      rawReq.indent,
     );
     if (passed !== all) process.exitCode = getStatusCode() + 1;
 
