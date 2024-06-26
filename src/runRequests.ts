@@ -10,12 +10,12 @@ import { CLI_VERSION } from "./utils/version";
 
 import { showContentForIndReq, showContentForAllReq } from "./showRes";
 import { allRequestsWithProgress } from "./getResponse";
-import { getVarFileContents, getVarStore } from "./variables";
+import { getVarFileContents } from "./variables";
 import { BundleResult } from "./bundleResult";
 
 async function runRequestSpecs(
   requests: { [name: string]: RequestSpec },
-  rawRequest: RawRequest,
+  rawRequest: RawRequest
 ): Promise<BundleResult> {
   for (const name in requests) {
     const request = requests[name];
@@ -27,11 +27,7 @@ async function runRequestSpecs(
     request.httpRequest.headers = Object.assign(autoHeaders, request.httpRequest.headers);
   }
 
-  const responses = await allRequestsWithProgress(
-    requests,
-    rawRequest.bundle.bundlePath,
-    rawRequest.indent,
-  );
+  const responses = await allRequestsWithProgress(requests, rawRequest);
 
   if (responses.length < 1) return new BundleResult(rawRequest.bundle.bundlePath);
 
@@ -48,7 +44,7 @@ async function runRequestSpecs(
       req.options.keepRawJSON,
       req.options.showHeaders,
       rawRequest.envName,
-      rawRequest.expand,
+      rawRequest.expand
     );
   }
 
@@ -64,11 +60,11 @@ export async function callRequests(request: RawRequest): Promise<BundleResult> {
     const loadedVariables: Variables = loadVariables(
       env,
       request.bundle.bundleContents,
-      getVarFileContents(path.dirname(request.bundle.bundlePath)),
+      getVarFileContents(path.dirname(request.bundle.bundlePath))
     );
     if (env && Object.keys(loadedVariables).length < 1)
       console.error(C_WARN(`warning: no variables added from env "${env}". Does it exist?`));
-    getVarStore().setLoadedVariables(loadedVariables);
+    request.variables.setLoadedVariables(loadedVariables);
   } catch (err: any) {
     throw err;
   }
@@ -84,7 +80,7 @@ export async function callRequests(request: RawRequest): Promise<BundleResult> {
     throw err;
   }
 
-  // finally, run the request specs 
+  // finally, run the request specs
   const t0 = performance.now();
   const bundleResult = await runRequestSpecs(allRequests, request);
   const t1 = performance.now();
