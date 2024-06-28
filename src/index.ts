@@ -8,7 +8,9 @@ import { RawRequest } from "./utils/requestUtils";
 import { getStatusCode } from "./utils/errors";
 
 import { callRequests } from "./runRequests";
-import { displaySummary } from "./bundleResult";
+import { displaySummary, markdownSummary } from "./bundleResult";
+import { mkdir, writeFile } from "fs/promises";
+import { existsSync } from "fs";
 
 const program = new Command(CLI_NAME);
 program
@@ -24,12 +26,16 @@ program
   .option("-e, --env <env-name>", "Run the request in a particular environment")
   .option("--expand", "Show the body output in the terminal")
   .option("--indent", "indent the failing tests for clarity in specs")
+  .option("--report", "Generate a markdown summary report")
+  .option("--report-dir", "Directory for markdown summary report file. Defaults to '.'")  
   .parse(process.argv);
 
 async function main() {
   const options = program.opts();
   options.expand = options.expand === true;
   options.indent = options.indent === true;
+  options.report = options.report === true;
+  options.reportDir = options.reportDir ?? ".";  
 
   const bundlePaths = program.args;
   const bundleResults = [];
@@ -52,6 +58,14 @@ async function main() {
   }
 
   displaySummary(bundleResults);
+
+  if (options.report) {
+    const report = markdownSummary(bundleResults);
+    if (!existsSync(options.reportDir)) {
+      await mkdir(options.reportDir);
+    }
+    await writeFile(`${options.reportDir}/zzapi-results.md`, report);
+  }
 }
 
 main();
