@@ -106,3 +106,46 @@ function renderDuration(duration: number) {
     ? C_TEXT(`${(duration / 1000).toFixed(3)} secs`)
     : C_TEXT(`${Math.round(duration).toFixed(0)} msecs`);
 }
+
+export function markdownSummary(bundleResults: BundleResult[]) {
+  let report = "";
+  report += "| Bundle |   | Specs | Tests | Duration |\n";
+  report += "|--------|---|-------|-------|----------|\n";
+
+  const suite = new BundleResult("All Bundles");
+  for (const bundleResult of bundleResults) {
+    suite.addResult(bundleResult);
+    report += markdownRow(bundleResult.bundlePath, bundleResult);
+  }
+
+  report += markdownRow(`**${suite.bundlePath}**`, suite);
+  report += "\n";
+
+  function markdownRow(bundleName: string, bundleResult: BundleResult): string {
+    const status =
+      bundleResult.allTests === 0 || bundleResult.passedTests === bundleResult.allTests ? "✅" : "❌";
+
+    const specs = markdownResult(bundleResult.passedSpecs, bundleResult.allSpecs);
+    const tests = markdownResult(bundleResult.passedTests, bundleResult.allTests);
+
+    const duration =
+      bundleResult.duration >= 1000
+        ? `${(bundleResult.duration / 1000).toFixed(3)} secs`
+        : `${Math.round(bundleResult.duration).toFixed(0)} msecs`;
+
+    return `| ${bundleName} | ${status} | ${specs} | ${tests} | ${duration} |\n`;
+  }
+
+  function markdownResult(passed: number, total: number) {
+    if (total === 0) {
+      return "`---`";
+    }
+
+    const score = Math.round((passed / total) * 100).toFixed(1);
+    return passed === total
+      ? `${score}% (\`${passed}\` / \`${total}\`)`
+      : `${score}% (❌ \`${total - passed}\` / ✅ \`${passed}\` / \`${total}\`)`;
+  }
+
+  return report;
+}
