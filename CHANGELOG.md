@@ -1,8 +1,9 @@
 # Change Log
 
-## [todo]
+## 3.1.0
 - Fix variable file sorting using explicit `sort()`
 - Summarize bundle results in a table
+- Use zzAPI v2.0.0 with various improvements
 
 ## [3.0.1]
 - Fix regression (status checks not reported)
