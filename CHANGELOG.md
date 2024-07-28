@@ -1,5 +1,12 @@
 # Change Log
 
+## 3.1.2
+- Optional markdown summary report
+- Bug fix: proper error message when request fails due to network
+
+# [3.1.1]
+- Failed
+
 ## 3.1.0
 - Fix variable file sorting using explicit `sort()`
 - Summarize bundle results in a table
