@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 import { Command } from "commander";
+import path from "path";
 
 import { CLI_NAME, CLI_VERSION } from "./utils/version";
 import { C_ERR_TEXT, C_PATH, C_WARN_TEXT } from "./utils/colours";
@@ -64,7 +65,7 @@ async function main() {
     if (!existsSync(options.reportDir)) {
       await mkdir(options.reportDir);
     }
-    await writeFile(`${options.reportDir}/zzapi-results.md`, report);
+    await writeFile(`${options.reportDir}` + path.sep + "zzapi-results.md", report);
   }
 }
 
