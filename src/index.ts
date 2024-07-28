@@ -27,7 +27,7 @@ program
   .option("--expand", "Show the body output in the terminal")
   .option("--indent", "indent the failing tests for clarity in specs")
   .option("--report", "Generate a markdown summary report")
-  .option("--report-dir", "Directory for markdown summary report file. Defaults to '.'")  
+  .option("--report-dir", "Directory for markdown summary report file. Defaults to '.'")
   .parse(process.argv);
 
 async function main() {
@@ -35,7 +35,7 @@ async function main() {
   options.expand = options.expand === true;
   options.indent = options.indent === true;
   options.report = options.report === true;
-  options.reportDir = options.reportDir ?? ".";  
+  options.reportDir = options.reportDir ?? ".";
 
   const bundlePaths = program.args;
   const bundleResults = [];
